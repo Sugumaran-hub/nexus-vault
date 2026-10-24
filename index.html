@@ -32,7 +32,6 @@
     .codec-badge { font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-family: monospace; }
     .codec-atmos { background: rgba(147, 51, 234, 0.2); border: 1px solid rgba(147, 51, 234, 0.4); color: #C084FC; }
     .codec-51 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; }
-    .codec-stereo { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #E4E4E7; }
 
     .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
@@ -68,7 +67,7 @@
   <div class="px-4 pt-3 pb-1 relative z-30">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
-      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search in this category..." 
+      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search strictly in this section..." 
         class="w-full bg-[#0E0E14] border border-white/10 rounded-2xl py-3 pl-10 pr-9 text-xs placeholder:text-white/30 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition">
       <button id="searchClearBtn" onclick="clearSearch()" class="absolute right-3 top-3 text-white/40 hover:text-white hidden w-5 h-5 flex items-center justify-center">
         <i class="fa-solid fa-circle-xmark text-xs"></i>
@@ -87,15 +86,6 @@
 
   <!-- Sub Pills -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
-
-  <!-- Nested Dubbed Hub Sub-languages -->
-  <div id="nestedDubContainer" class="px-4 pb-2.5 flex gap-2 overflow-x-auto no-scrollbar" style="display: none;">
-    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this, 'all')">All Dubs</button>
-    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'tamil')">Tamil Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'telugu')">Telugu Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'hindi')">Hindi Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'malayalam')">Malayalam Dubbed</button>
-  </div>
 
   <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
@@ -121,7 +111,7 @@
       </button>
     </div>
 
-    <!-- Episodes Multi-Select Section -->
+    <!-- Episodes Multi-Select Section (Dynamic Seasons & Real Episodes) -->
     <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
       <div class="flex items-center justify-between mb-2">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes</label>
@@ -152,7 +142,7 @@
         <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
           <i class="fa-solid fa-play text-red-600"></i> <span id="streamBtnText">Stream in MX</span>
         </button>
-        <button onclick="launchDirectDownload()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
+        <button onclick="triggerDirectDownload()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
           <i class="fa-solid fa-download"></i> <span id="downloadBtnText">Download Direct</span>
         </button>
       </div>
@@ -183,34 +173,30 @@
         { label: "Telugu", key: "telugu" },
         { label: "Kannada", key: "kannada" },
         { label: "Hindi", key: "hindi" },
-        { label: "Hollywood", key: "hollywood" },
-        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+        { label: "Hollywood", key: "hollywood" }
       ],
       series: [
         { label: "All Series", key: "all" },
         { label: "Tamil Web Series", key: "tamil" },
         { label: "Hindi Shows", key: "hindi" },
-        { label: "English Shows", key: "hollywood" },
-        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+        { label: "English Shows", key: "hollywood" }
       ],
       kdrama: [
         { label: "All K-Drama", key: "all" },
-        { label: "Tamil Dubbed", key: "dubbed_hub" },
         { label: "Original Korean", key: "korean" }
       ],
       anime: [
         { label: "All Anime", key: "all" },
-        { label: "Tamil Dubbed", key: "dubbed_hub" },
-        { label: "English Dubbed", key: "english_dub" },
-        { label: "Japanese (Sub)", key: "subbed" }
+        { label: "Japanese (Sub/Dub)", key: "subbed" }
       ]
     };
 
     let currentTab = 'movies';
     let currentSub = 'all';
-    let currentNestedDub = 'all';
     let currentSearch = '';
     let currentStreamUrl = "";
+    let activeSeasonsList = [];
+    let currentSeasonIndex = 0;
     let selectedEpisodes = [1];
     let totalEpisodesCount = 0;
     let currentQualities = [];
@@ -245,7 +231,7 @@
     async function fetchVaultData() {
       renderShimmerSkeletons();
       try {
-        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}&dub_lang=${currentNestedDub}`);
+        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}`);
         if (!response.ok) throw new Error("API error");
         const data = await response.json();
         vaultData = data.results || [];
@@ -280,7 +266,7 @@
         grid.innerHTML = `
           <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
             <i class="fa-solid fa-magnifying-glass text-2xl mb-2 opacity-30"></i><br>
-            <span>No results found in this section.</span><br>
+            <span>No titles found in this section.</span><br>
             <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Filter</button>
           </div>`;
         return;
@@ -376,8 +362,6 @@
 
       currentTab = tabKey;
       currentSub = 'all';
-      currentNestedDub = 'all';
-      document.getElementById('nestedDubContainer').style.display = 'none';
       renderSubPills();
       fetchVaultData();
     }
@@ -385,37 +369,15 @@
     function switchSubPill(btn, filterKey) {
       haptic();
       currentSub = filterKey;
-      currentNestedDub = 'all';
       Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
-
-      const nestedContainer = document.getElementById('nestedDubContainer');
-      if (filterKey === 'dubbed_hub') {
-        nestedContainer.style.display = 'flex';
-        Array.from(nestedContainer.children).forEach((c, idx) => {
-          c.className = idx === 0 
-            ? 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap'
-            : 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
-        });
-      } else {
-        nestedContainer.style.display = 'none';
-      }
       updateSearchPlaceholder();
+
       if (currentSearch.length > 0) {
         performStrictSearch(currentSearch);
       } else {
         fetchVaultData();
       }
-    }
-
-    function selectNestedDub(btn, dubLang) {
-      haptic();
-      currentNestedDub = dubLang;
-      Array.from(btn.parentElement.children).forEach(el => {
-        el.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
-      });
-      btn.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap';
-      fetchVaultData();
     }
 
     function openMediaModal(itemId) {
@@ -424,8 +386,6 @@
       if (!item) return;
 
       currentStreamUrl = item.streamUrl;
-      selectedEpisodes = [1];
-      totalEpisodesCount = item.episodes || 1;
       currentQualities = item.qualities || [];
       selectedQualityIndex = 0;
       currentAudioList = item.audios || [];
@@ -437,11 +397,15 @@
       document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${item.subs}`;
 
       const seriesSection = document.getElementById('seriesSection');
-      if (item.type === 'tv' || item.type === 'series') {
+      if (item.type === 'tv' && item.seasons_list && item.seasons_list.length > 0) {
         seriesSection.classList.remove('hidden');
-        renderSeasonsAndEpisodes(item.seasons || 1, item.episodes || 1);
+        activeSeasonsList = item.seasons_list;
+        currentSeasonIndex = 0;
+        renderDynamicSeasons();
       } else {
         seriesSection.classList.add('hidden');
+        totalEpisodesCount = 1;
+        selectedEpisodes = [1];
       }
 
       renderAudioTracks();
@@ -456,71 +420,37 @@
       modal.classList.add('sheet-up');
     }
 
-    function renderAudioTracks() {
-      const audioBox = document.getElementById('audioTracks');
-      audioBox.innerHTML = '';
-      currentAudioList.forEach((aud, i) => {
-        const isSelected = (i === selectedAudioIndex);
-        let badgeClass = 'codec-stereo';
-        if (aud.type === 'atmos') badgeClass = 'codec-atmos';
-        if (aud.type === '51') badgeClass = 'codec-51';
-
-        audioBox.innerHTML += `
-          <button class="${isSelected ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectAudio(${i})">
-            <span>${aud.lang}</span>
-            <span class="codec-badge ${badgeClass}">${aud.codec}</span>
-          </button>`;
-      });
-    }
-
-    function selectAudio(index) {
-      haptic();
-      selectedAudioIndex = index;
-      renderAudioTracks();
-      updateActionButtons();
-    }
-
-    function renderQualityPills() {
-      const qualityBox = document.getElementById('qualityPills');
-      qualityBox.innerHTML = '';
-      currentQualities.forEach((q, i) => {
-        const isSelected = (i === selectedQualityIndex);
-        qualityBox.innerHTML += `
-          <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectQuality(${i})">
-            <span>${q.res}</span>
-            <span class="text-[10px] ${isSelected ? 'text-zinc-600' : 'text-white/40'} font-mono">(${q.size})</span>
-          </button>`;
-      });
-    }
-
-    function selectQuality(index) {
-      haptic();
-      selectedQualityIndex = index;
-      renderQualityPills();
-      updateActionButtons();
-    }
-
-    function renderSeasonsAndEpisodes(seasons, episodes) {
+    function renderDynamicSeasons() {
       const sBox = document.getElementById('seasonPills');
       sBox.innerHTML = '';
-      for (let s = 1; s <= seasons; s++) {
-        sBox.innerHTML += `<button class="${s === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1 rounded-lg text-xs" onclick="selectSeason(this)">Season ${s}</button>`;
-      }
+      activeSeasonsList.forEach((s, idx) => {
+        const isSelected = (idx === currentSeasonIndex);
+        sBox.innerHTML += `
+          <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1 rounded-lg text-xs whitespace-nowrap" onclick="switchSeason(${idx})">
+            ${s.name} (${s.episode_count} eps)
+          </button>`;
+      });
+      loadEpisodesForCurrentSeason();
+    }
+
+    function switchSeason(idx) {
+      haptic();
+      currentSeasonIndex = idx;
+      renderDynamicSeasons();
+    }
+
+    function loadEpisodesForCurrentSeason() {
+      const curSeason = activeSeasonsList[currentSeasonIndex];
+      totalEpisodesCount = curSeason.episode_count || 1;
+      selectedEpisodes = [1];
 
       const eBox = document.getElementById('episodeGrid');
       eBox.innerHTML = '';
-      for (let e = 1; e <= episodes; e++) {
-        const isSelected = selectedEpisodes.includes(e);
+      for (let e = 1; e <= totalEpisodesCount; e++) {
+        const isSelected = (e === 1);
         eBox.innerHTML += `<button id="ep-btn-${e}" class="ep-pill ${isSelected ? 'selected' : ''} whitespace-nowrap" onclick="toggleEpisode(${e})">EP ${e}</button>`;
       }
-    }
-
-    function selectSeason(btn) {
-      haptic();
-      Array.from(btn.parentElement.children).forEach(c => {
-        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-lg text-xs';
-      });
-      btn.className = 'bg-white text-black font-bold px-3 py-1 rounded-lg text-xs';
+      updateActionButtons();
     }
 
     function toggleEpisode(epNumber) {
@@ -557,6 +487,47 @@
           else btn.classList.remove('selected');
         }
       }
+      updateActionButtons();
+    }
+
+    function renderAudioTracks() {
+      const audioBox = document.getElementById('audioTracks');
+      audioBox.innerHTML = '';
+      currentAudioList.forEach((aud, i) => {
+        const isSelected = (i === selectedAudioIndex);
+        let badgeClass = aud.type === 'atmos' ? 'codec-atmos' : 'codec-51';
+        audioBox.innerHTML += `
+          <button class="${isSelected ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectAudio(${i})">
+            <span>${aud.lang}</span>
+            <span class="codec-badge ${badgeClass}">${aud.codec}</span>
+          </button>`;
+      });
+    }
+
+    function selectAudio(index) {
+      haptic();
+      selectedAudioIndex = index;
+      renderAudioTracks();
+      updateActionButtons();
+    }
+
+    function renderQualityPills() {
+      const qualityBox = document.getElementById('qualityPills');
+      qualityBox.innerHTML = '';
+      currentQualities.forEach((q, i) => {
+        const isSelected = (i === selectedQualityIndex);
+        qualityBox.innerHTML += `
+          <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectQuality(${i})">
+            <span>${q.res}</span>
+            <span class="text-[10px] ${isSelected ? 'text-zinc-600' : 'text-white/40'} font-mono">(${q.size})</span>
+          </button>`;
+      });
+    }
+
+    function selectQuality(index) {
+      haptic();
+      selectedQualityIndex = index;
+      renderQualityPills();
       updateActionButtons();
     }
 
@@ -598,17 +569,17 @@
       window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
     }
 
-    function launchDirectDownload() {
+    function triggerDirectDownload() {
       haptic();
       if (!currentStreamUrl) return;
-      // Direct Native Download Trigger - works in 1DM & all Android mobile browsers
-      const link = document.createElement('a');
-      link.href = currentStreamUrl;
-      link.setAttribute('download', 'video.mp4');
-      link.setAttribute('target', '_blank');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Direct file downloader
+      const a = document.createElement('a');
+      a.href = currentStreamUrl;
+      a.setAttribute('download', 'video.mp4');
+      a.setAttribute('target', '_blank');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function copyStreamUrl() {
