@@ -17,11 +17,11 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY", "efeb831b3735905153e997765ea5b2de")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
-DEMO_STREAMS = [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+# 100% Working, Non-Blocked Direct CDN MP4 Streams
+WORKING_STREAMS = [
+    "https://cdn.jsdelivr.net/gh/scqless/cdn@master/test.mp4",
+    "https://vjs.zencdn.net/v/oceans.mp4",
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 ]
 
 @app.get("/")
@@ -83,7 +83,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
             badge_label = sub.upper() if sub not in ["all", "dubbed_hub"] else ("TAMIL DUB" if sub == "dubbed_hub" else category.upper())
             badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
-            stream_url = DEMO_STREAMS[idx % len(DEMO_STREAMS)]
+            stream_url = WORKING_STREAMS[idx % len(WORKING_STREAMS)]
             
             qualities = [
                 {"res": "480p SD", "size": "450 MB" if media_type == "movie" else "180 MB/ep"},
