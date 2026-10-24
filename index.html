@@ -75,7 +75,6 @@
       </button>
     </div>
 
-    <!-- Live Search Suggestion Dropdown -->
     <div id="searchSuggestions" class="absolute left-4 right-4 top-[50px] bg-[#0E0E15] border border-white/10 rounded-2xl shadow-2xl p-2 hidden max-h-60 overflow-y-auto no-scrollbar gpu"></div>
   </div>
 
@@ -133,13 +132,13 @@
       <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </div>
 
-    <!-- Audio Selection with Codec Badges -->
+    <!-- Audio Selection -->
     <div class="mt-4">
       <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Quality Selection -->
+    <!-- Quality Selection (Includes 480p SD) -->
     <div class="mt-4">
       <div class="flex items-center justify-between">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
@@ -247,7 +246,7 @@
         document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5';
         document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD';
       } catch (err) {
-        console.warn("Backend sleeping or offline, using cache fallback", err);
+        console.warn("Backend sleeping or offline", err);
         document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5';
         document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>CACHED';
       }
@@ -271,15 +270,9 @@
       grid.innerHTML = '';
 
       const filtered = vaultData.filter(item => {
-        if (currentTab !== 'movies' && item.category !== currentTab) return false;
-        
-        if (currentSub === 'dubbed_hub') {
-          if (item.subCategory !== 'dubbed_hub') return false;
-          if (currentNestedDub !== 'all' && item.dubLanguage !== currentNestedDub) return false;
-        } else if (currentSub !== 'all' && item.subCategory !== currentSub) {
+        if (currentSub === 'dubbed_hub' && currentNestedDub !== 'all' && item.dubLanguage !== currentNestedDub) {
           return false;
         }
-
         if (currentSearch) {
           const q = currentSearch.toLowerCase();
           return item.title.toLowerCase().includes(q) || item.subInfo.toLowerCase().includes(q);
@@ -291,8 +284,8 @@
         grid.innerHTML = `
           <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
             <i class="fa-solid fa-magnifying-glass text-2xl mb-2 opacity-30"></i><br>
-            <span>No master titles found for "${currentSearch}".</span><br>
-            <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Search & Reset Hub</button>
+            <span>No titles found.</span><br>
+            <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Filter</button>
           </div>`;
         return;
       }
@@ -363,7 +356,9 @@
       document.getElementById('searchClearBtn').classList.add('hidden');
       document.getElementById('searchSuggestions').classList.add('hidden');
       currentSearch = '';
-      renderMediaGrid();
+      currentSub = 'all';
+      renderSubPills();
+      fetchVaultData();
     }
 
     function switchMainTab(btn, tabKey) {
@@ -398,7 +393,7 @@
       } else {
         nestedContainer.style.display = 'none';
       }
-      renderMediaGrid();
+      fetchVaultData();
     }
 
     function selectNestedDub(btn, dubLang) {
@@ -430,7 +425,7 @@
       document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${item.subs}`;
 
       const seriesSection = document.getElementById('seriesSection');
-      if (item.type === 'series') {
+      if (item.type === 'tv' || item.type === 'series') {
         seriesSection.classList.remove('hidden');
         renderSeasonsAndEpisodes(item.seasons || 1, item.episodes || 1);
       } else {
@@ -607,9 +602,9 @@
       });
     }
 
-    // Initial Execution
+    // Init Execution
     renderSubPills();
     fetchVaultData();
   </script>
 </body>
-    </html>
+                                                                                                 </html>
