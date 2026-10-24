@@ -1,7 +1,6 @@
 import os
 import requests
 from fastapi import FastAPI, Query
-from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Nexus Vault Master Engine")
@@ -18,21 +17,9 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY", "efeb831b3735905153e997765ea5b2de")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
-# 100% Active, Open-Source MP4 Direct Files (Zero Google Storage / Zero AccessDenied)
-DIRECT_OPEN_MP4 = [
-    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "https://vjs.zencdn.net/v/oceans.mp4"
-]
-
 @app.get("/")
 def home():
-    return {"status": "active", "core": "Nexus Vault High Speed Core"}
-
-@app.get("/api/download")
-def download_stream(id: int = Query(...), filename: str = Query("video.mp4")):
-    """Direct clean download redirect avoiding browser XML cache"""
-    stream_url = DIRECT_OPEN_MP4[id % len(DIRECT_OPEN_MP4)]
-    return RedirectResponse(url=stream_url)
+    return {"status": "active", "core": "Nexus Vault Streaming Engine"}
 
 @app.get("/api/tv_details")
 def tv_details(tv_id: int):
@@ -62,6 +49,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
         "page": 1
     }
     
+    # Universal Dubbed Hub Logic across ALL categories
     if sub == "dubbed_hub":
         if category == "kdrama":
             params["with_original_language"] = "ko"
@@ -105,8 +93,6 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
             badge_label = f"{dub_lang.upper()} DUB" if sub == "dubbed_hub" and dub_lang != "all" else (sub.upper() if sub not in ["all", "dubbed_hub"] else category.upper())
             badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
-            stream_url = DIRECT_OPEN_MP4[idx % len(DIRECT_OPEN_MP4)]
-            
             primary_aud = f"{dub_lang.capitalize()} Dubbed" if sub == "dubbed_hub" and dub_lang != "all" else ("Tamil Master" if sub in ["tamil", "dubbed_hub"] else "Original Audio")
 
             audios = [
@@ -128,7 +114,6 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
                 "subs": "English, Tamil",
                 "subInfo": f"{sub.capitalize() if sub != 'all' else category.capitalize()} • Trending",
                 "img": img_url,
-                "streamUrl": stream_url,
                 "audios": audios,
                 "qualities": [
                     {"res": "480p SD", "size": "350 MB" if media_type == "movie" else "150 MB/ep"},
@@ -170,7 +155,7 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
         raw_items = res.get("results", [])
         items = []
 
-        for idx, item in enumerate(raw_items):
+        for item in raw_items:
             title = item.get("title") or item.get("name")
             item_id = item.get("id")
             poster = item.get("poster_path")
@@ -184,7 +169,6 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                 continue
 
             badge_name = sub.upper() if sub != "all" else category.upper()
-            stream_url = DIRECT_OPEN_MP4[idx % len(DIRECT_OPEN_MP4)]
 
             if title and poster:
                 items.append({
@@ -201,7 +185,6 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                     "subs": "English, Tamil",
                     "subInfo": f"{category.capitalize()} • Match",
                     "img": f"{TMDB_IMAGE_BASE}{poster}",
-                    "streamUrl": stream_url,
                     "audios": [
                         {"lang": f"{sub.capitalize()} Master" if sub != "all" else "Tamil Master", "codec": "Dolby 5.1", "type": "51"},
                         {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos"}
