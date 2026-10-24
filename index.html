@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Nexus Vault</title>
+  <title>Nexus Stream Vault</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,6 +29,9 @@
     .ep-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.7); font-size: 11px; padding: 7px 12px; border-radius: 10px; font-weight: 600; }
     .ep-pill.selected { background: #E50914; border-color: #E50914; color: #FFF; font-weight: 800; box-shadow: 0 2px 10px rgba(229, 9, 20, 0.4); }
 
+    .server-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); font-size: 10px; padding: 4px 10px; border-radius: 8px; font-weight: 600; }
+    .server-pill.active { background: #E50914; border-color: #E50914; color: #FFF; font-weight: 800; }
+
     .codec-badge { font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-family: monospace; }
     .codec-atmos { background: rgba(147, 51, 234, 0.2); border: 1px solid rgba(147, 51, 234, 0.4); color: #C084FC; }
     .codec-51 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; }
@@ -53,7 +56,7 @@
           <span class="text-white font-black text-lg tracking-wider">NEXUS</span>
           <span class="bg-red-600/20 text-red-500 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-red-500/30">STREAM</span>
         </div>
-        <span class="text-[9px] text-white/40 tracking-widest uppercase mt-0.5 block">Zero-Lag Auto Player</span>
+        <span class="text-[9px] text-white/40 tracking-widest uppercase mt-0.5 block">Multi-Audio Private Player</span>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -84,7 +87,7 @@
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
   </div>
 
-  <!-- Sub Pills (Includes Dubbed Hub in ALL 4 Categories) -->
+  <!-- Sub Pills -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
 
   <!-- Nested Dubbed Hub Sub-languages -->
@@ -99,7 +102,7 @@
   <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
 
-  <!-- Bottom Sheet Modal with Live Video Player -->
+  <!-- Bottom Sheet Modal with Live Multi-Server Video Player -->
   <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeSheet()"></div>
   
   <div id="mediaModal" class="fixed inset-x-0 bottom-0 z-50 bg-[#0A0A0F] border-t border-white/10 rounded-t-[32px] p-5 pb-8 sheet-down shadow-2xl max-h-[92vh] overflow-y-auto no-scrollbar gpu">
@@ -120,37 +123,50 @@
       </button>
     </div>
 
-    <!-- Live Auto-Stream Embed Video Player -->
+    <!-- Live Auto-Stream Video Player -->
     <div class="mt-3 rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl aspect-video w-full relative">
       <iframe id="videoPlayerFrame" class="w-full h-full border-0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
 
+    <!-- Server Routing Line -->
+    <div class="mt-2.5 flex items-center justify-between">
+      <span class="text-[10px] text-white/40 font-mono uppercase">Multi-Audio Server</span>
+      <div class="flex gap-1.5" id="serverButtons">
+        <button id="srv-auto" class="server-pill active" onclick="switchServer('smashy')">Tamil Dubbed Server</button>
+        <button id="srv-vid" class="server-pill" onclick="switchServer('vidsrc')">VidSrc HD</button>
+        <button id="srv-super" class="server-pill" onclick="switchServer('superembed')">Server 2</button>
+      </div>
+    </div>
+
     <!-- Episodes Multi-Select Section -->
-    <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
+    <div id="seriesSection" class="mt-3 hidden border-t border-white/5 pt-3">
       <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono block mb-1.5">Select Season</label>
-      <div id="seasonPills" class="flex gap-2 overflow-x-auto no-scrollbar mb-3"></div>
+      <div id="seasonPills" class="flex gap-2 overflow-x-auto no-scrollbar mb-2.5"></div>
       
       <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono block mb-1.5">Select Episode</label>
       <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </div>
 
-    <!-- Audio Selection Profile -->
-    <div class="mt-4">
-      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Selected Audio Track</label>
-      <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
+    <!-- Audio Selection Profile (Direct Auto-Route) -->
+    <div class="mt-3">
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Audio Track</label>
+        <span class="text-[9px] text-amber-400 font-mono"><i class="fa-solid fa-gear mr-1"></i>Use in-player Gear for extra tracks</span>
+      </div>
+      <div id="audioTracks" class="flex gap-2 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Quality Selection -->
-    <div class="mt-4">
+    <!-- Quality Selection Profile -->
+    <div class="mt-3">
       <div class="flex items-center justify-between">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality Profile</label>
-        <span id="calculatedSizeText" class="text-[10px] font-mono text-emerald-400 font-bold">Ultra HD 1080p</span>
+        <span class="text-[10px] font-mono text-emerald-400 font-bold">Auto Adaptive 1080p</span>
       </div>
       <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- External Player Action -->
-    <div class="mt-5 space-y-2.5">
+    <!-- Fullscreen Stream Mode -->
+    <div class="mt-4">
       <button onclick="openFullscreenStream()" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
         <i class="fa-solid fa-expand"></i> Full Screen Stream Mode
       </button>
@@ -203,6 +219,7 @@
     let activeSeasonsList = [];
     let currentSeasonIndex = 0;
     let currentEpisode = 1;
+    let currentServer = 'smashy';
     let currentQualities = [];
     let selectedQualityIndex = 0;
     let currentAudioList = [];
@@ -414,6 +431,7 @@
       selectedQualityIndex = 0;
       currentAudioList = item.audios || [];
       selectedAudioIndex = 0;
+      currentServer = (currentSub === 'dubbed_hub' || currentTab === 'anime' || currentTab === 'kdrama' || currentSub === 'tamil') ? 'smashy' : 'vidsrc';
 
       document.getElementById('modalTitle').innerText = item.title;
       document.getElementById('modalMeta').innerText = `${item.year} • ★ ${item.rating} • ${item.subInfo}`;
@@ -442,6 +460,7 @@
 
       renderAudioTracks();
       renderQualityPills();
+      updateServerButtonsUI();
 
       const backdrop = document.getElementById('modalBackdrop');
       const modal = document.getElementById('mediaModal');
@@ -502,13 +521,41 @@
       if (!currentItem) return;
       const frame = document.getElementById('videoPlayerFrame');
       let url = "";
-      if (currentItem.type === 'tv') {
-        const seasonNum = activeSeasonsList[currentSeasonIndex] ? activeSeasonsList[currentSeasonIndex].season_number : 1;
-        url = `https://vidsrc.to/embed/tv/${currentItem.id}/${seasonNum}/${currentEpisode}`;
+      const isTv = currentItem.type === 'tv';
+      const seasonNum = (isTv && activeSeasonsList[currentSeasonIndex]) ? activeSeasonsList[currentSeasonIndex].season_number : 1;
+      
+      if (currentServer === 'smashy') {
+        url = isTv 
+          ? `https://player.smashy.stream/tv/${currentItem.id}?s=${seasonNum}&e=${currentEpisode}`
+          : `https://player.smashy.stream/movie/${currentItem.id}`;
+      } else if (currentServer === 'superembed') {
+        url = isTv
+          ? `https://multiembed.mov/?video_id=${currentItem.id}&tmdb=1&s=${seasonNum}&e=${currentEpisode}`
+          : `https://multiembed.mov/?video_id=${currentItem.id}&tmdb=1`;
       } else {
-        url = `https://vidsrc.to/embed/movie/${currentItem.id}`;
+        url = isTv
+          ? `https://vidsrc.to/embed/tv/${currentItem.id}/${seasonNum}/${currentEpisode}`
+          : `https://vidsrc.to/embed/movie/${currentItem.id}`;
       }
+      
       frame.src = url;
+    }
+
+    function switchServer(srv) {
+      haptic();
+      currentServer = srv;
+      updateServerButtonsUI();
+      loadStreamIntoFrame();
+    }
+
+    function updateServerButtonsUI() {
+      ['smashy', 'vidsrc', 'superembed'].forEach(s => {
+        const btn = document.getElementById(`srv-${s === 'smashy' ? 'auto' : (s === 'vidsrc' ? 'vid' : 'super')}`);
+        if (btn) {
+          if (currentServer === s) btn.className = 'server-pill active';
+          else btn.className = 'server-pill';
+        }
+      });
     }
 
     function renderAudioTracks() {
@@ -529,6 +576,13 @@
       haptic();
       selectedAudioIndex = index;
       renderAudioTracks();
+      
+      const selectedTrack = currentAudioList[index];
+      if (selectedTrack && selectedTrack.server) {
+        currentServer = selectedTrack.server;
+        updateServerButtonsUI();
+        loadStreamIntoFrame();
+      }
     }
 
     function renderQualityPills() {
@@ -565,7 +619,7 @@
       const backdrop = document.getElementById('modalBackdrop');
       const modal = document.getElementById('mediaModal');
       const frame = document.getElementById('videoPlayerFrame');
-      frame.src = ""; // Stop stream playback immediately
+      frame.src = "";
       backdrop.classList.add('opacity-0');
       modal.classList.remove('sheet-up');
       modal.classList.add('sheet-down');
