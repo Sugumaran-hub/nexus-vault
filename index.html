@@ -84,10 +84,10 @@
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
   </div>
 
-  <!-- Sub Pills (Now includes Dubbed Hub in ALL Categories) -->
+  <!-- Sub Pills -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
 
-  <!-- Nested Dubbed Hub Sub-languages (Universal) -->
+  <!-- Nested Dubbed Hub Sub-languages -->
   <div id="nestedDubContainer" class="px-4 pb-2.5 flex gap-2 overflow-x-auto no-scrollbar" style="display: none;">
     <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this, 'all')">All Dubs</button>
     <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'tamil')">Tamil Dubbed</button>
@@ -175,7 +175,6 @@
     let vaultData = [];
     let searchDebounceTimer = null;
     
-    // Dubbed Hub is now present across ALL 4 categories!
     const subFilters = {
       movies: [
         { label: "All Movies", key: "all" },
@@ -210,7 +209,7 @@
     let currentSub = 'all';
     let currentNestedDub = 'all';
     let currentSearch = '';
-    let currentStreamUrl = "";
+    let currentItem = null;
     let activeSeasonsList = [];
     let currentSeasonIndex = 0;
     let selectedEpisodes = [1];
@@ -421,7 +420,7 @@
       const item = vaultData.find(i => i.id === itemId);
       if (!item) return;
 
-      currentStreamUrl = item.streamUrl;
+      currentItem = item;
       currentQualities = item.qualities || [];
       selectedQualityIndex = 0;
       currentAudioList = item.audios || [];
@@ -575,6 +574,18 @@
       updateActionButtons();
     }
 
+    function getResolvedTargetUrl() {
+      if (!currentItem) return "";
+      const curQ = currentQualities[selectedQualityIndex] ? currentQualities[selectedQualityIndex].res.split(' ')[0] : '720p';
+      const curAud = currentAudioList[selectedAudioIndex] ? currentAudioList[selectedAudioIndex].lang.replace(/\s+/g, '_') : 'Audio';
+      const epStr = totalEpisodesCount > 1 ? `_S${currentSeasonIndex + 1}E${selectedEpisodes[0]}` : '';
+      const cleanTitle = (currentItem.title || "video").replace(/[^a-zA-Z0-9]/g, '_');
+      
+      // Dynamic anti-merge, anti-cache URL with movie specific metadata query
+      const base = currentItem.streamUrl.split('?')[0];
+      return `${base}?file=${cleanTitle}${epStr}_${curQ}_${curAud}.mp4&id=${currentItem.id}&t=${Date.now()}`;
+    }
+
     function updateActionButtons() {
       const count = selectedEpisodes.length;
       const curQ = currentQualities[selectedQualityIndex];
@@ -610,16 +621,23 @@
 
     function launchMX() {
       haptic();
-      if (!currentStreamUrl) return;
-      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
+      const url = getResolvedTargetUrl();
+      if (!url) return;
+      window.location.href = `intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
     }
 
     function triggerDirectDownload() {
       haptic();
-      if (!currentStreamUrl) return;
+      const url = getResolvedTargetUrl();
+      if (!url) return;
+      
+      const cleanTitle = (currentItem ? currentItem.title : "Nexus_Media").replace(/[^a-zA-Z0-9]/g, '_');
+      const qRes = currentQualities[selectedQualityIndex] ? currentQualities[selectedQualityIndex].res.split(' ')[0] : 'HD';
+      const fileName = `${cleanTitle}_${qRes}.mp4`;
+
       const a = document.createElement('a');
-      a.href = currentStreamUrl;
-      a.setAttribute('download', 'video.mp4');
+      a.href = url;
+      a.setAttribute('download', fileName);
       a.setAttribute('target', '_blank');
       document.body.appendChild(a);
       a.click();
@@ -628,8 +646,9 @@
 
     function copyStreamUrl() {
       haptic();
-      if (!currentStreamUrl) return;
-      navigator.clipboard.writeText(currentStreamUrl).then(() => {
+      const url = getResolvedTargetUrl();
+      if (!url) return;
+      navigator.clipboard.writeText(url).then(() => {
         const toast = document.getElementById('toast');
         toast.classList.remove('hidden');
         setTimeout(() => toast.classList.add('hidden'), 2000);
