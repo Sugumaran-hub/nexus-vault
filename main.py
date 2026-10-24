@@ -3,7 +3,7 @@ import requests
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Nexus Vault Master Engine")
+app = FastAPI(title="Nexus Stream Engine")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,7 +19,7 @@ TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
 @app.get("/")
 def home():
-    return {"status": "active", "core": "Nexus Vault Streaming Engine"}
+    return {"status": "active", "core": "Nexus Multi-Audio Streaming Core"}
 
 @app.get("/api/tv_details")
 def tv_details(tv_id: int):
@@ -49,14 +49,13 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
         "page": 1
     }
     
-    # Universal Dubbed Hub Logic across ALL categories
     if sub == "dubbed_hub":
         if category == "kdrama":
             params["with_original_language"] = "ko"
         elif category == "anime":
             params["with_original_language"] = "ja"
             params["with_genres"] = "16"
-        elif category in ["movies", "series"]:
+        else:
             params["with_original_language"] = "en"
     elif category == "kdrama":
         params["with_original_language"] = "ko"
@@ -93,11 +92,11 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
             badge_label = f"{dub_lang.upper()} DUB" if sub == "dubbed_hub" and dub_lang != "all" else (sub.upper() if sub not in ["all", "dubbed_hub"] else category.upper())
             badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
-            primary_aud = f"{dub_lang.capitalize()} Dubbed" if sub == "dubbed_hub" and dub_lang != "all" else ("Tamil Master" if sub in ["tamil", "dubbed_hub"] else "Original Audio")
+            primary_aud = f"{dub_lang.capitalize()} Dubbed" if sub == "dubbed_hub" and dub_lang != "all" else ("Tamil Dubbed" if sub in ["tamil", "dubbed_hub"] else "Original Audio")
 
             audios = [
-                {"lang": primary_aud, "codec": "Dolby 5.1", "type": "51"},
-                {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos"}
+                {"lang": primary_aud, "codec": "Multi-Audio", "type": "51", "server": "smashy"},
+                {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos", "server": "vidsrc"}
             ]
 
             items.append({
@@ -116,10 +115,9 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
                 "img": img_url,
                 "audios": audios,
                 "qualities": [
-                    {"res": "480p SD", "size": "350 MB" if media_type == "movie" else "150 MB/ep"},
-                    {"res": "720p HD", "size": "850 MB" if media_type == "movie" else "380 MB/ep"},
-                    {"res": "1080p FHD", "size": "2.2 GB" if media_type == "movie" else "850 MB/ep"},
-                    {"res": "4K UHD", "size": "5.6 GB" if media_type == "movie" else "2.1 GB/ep"}
+                    {"res": "480p SD", "size": "Adaptive"},
+                    {"res": "720p HD", "size": "Adaptive"},
+                    {"res": "1080p FHD", "size": "Adaptive"}
                 ],
                 "type": media_type
             })
@@ -186,14 +184,13 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                     "subInfo": f"{category.capitalize()} • Match",
                     "img": f"{TMDB_IMAGE_BASE}{poster}",
                     "audios": [
-                        {"lang": f"{sub.capitalize()} Master" if sub != "all" else "Tamil Master", "codec": "Dolby 5.1", "type": "51"},
-                        {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos"}
+                        {"lang": f"{sub.capitalize()} Dubbed" if sub != "all" else "Tamil Dubbed", "codec": "Multi-Audio", "type": "51", "server": "smashy"},
+                        {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos", "server": "vidsrc"}
                     ],
                     "qualities": [
-                        {"res": "480p SD", "size": "350 MB"},
-                        {"res": "720p HD", "size": "850 MB"},
-                        {"res": "1080p FHD", "size": "2.2 GB"},
-                        {"res": "4K UHD", "size": "5.6 GB"}
+                        {"res": "480p SD", "size": "Adaptive"},
+                        {"res": "720p HD", "size": "Adaptive"},
+                        {"res": "1080p FHD", "size": "Adaptive"}
                     ],
                     "type": media_type
                 })
