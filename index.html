@@ -574,18 +574,6 @@
       updateActionButtons();
     }
 
-    function getResolvedTargetUrl() {
-      if (!currentItem) return "";
-      const curQ = currentQualities[selectedQualityIndex] ? currentQualities[selectedQualityIndex].res.split(' ')[0] : '720p';
-      const curAud = currentAudioList[selectedAudioIndex] ? currentAudioList[selectedAudioIndex].lang.replace(/\s+/g, '_') : 'Audio';
-      const epStr = totalEpisodesCount > 1 ? `_S${currentSeasonIndex + 1}E${selectedEpisodes[0]}` : '';
-      const cleanTitle = (currentItem.title || "video").replace(/[^a-zA-Z0-9]/g, '_');
-      
-      // Dynamic anti-merge, anti-cache URL with movie specific metadata query
-      const base = currentItem.streamUrl.split('?')[0];
-      return `${base}?file=${cleanTitle}${epStr}_${curQ}_${curAud}.mp4&id=${currentItem.id}&t=${Date.now()}`;
-    }
-
     function updateActionButtons() {
       const count = selectedEpisodes.length;
       const curQ = currentQualities[selectedQualityIndex];
@@ -621,23 +609,20 @@
 
     function launchMX() {
       haptic();
-      const url = getResolvedTargetUrl();
-      if (!url) return;
-      window.location.href = `intent:${url}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
+      if (!currentItem) return;
+      const streamUrl = currentItem.streamUrl;
+      window.location.href = `intent:${streamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
     }
 
     function triggerDirectDownload() {
       haptic();
-      const url = getResolvedTargetUrl();
-      if (!url) return;
+      if (!currentItem) return;
+      const cleanTitle = (currentItem.title || "video").replace(/[^a-zA-Z0-9]/g, '_');
+      const downloadEndpoint = `${API_BASE_URL}/api/download?id=${currentItem.id}&filename=${cleanTitle}.mp4`;
       
-      const cleanTitle = (currentItem ? currentItem.title : "Nexus_Media").replace(/[^a-zA-Z0-9]/g, '_');
-      const qRes = currentQualities[selectedQualityIndex] ? currentQualities[selectedQualityIndex].res.split(' ')[0] : 'HD';
-      const fileName = `${cleanTitle}_${qRes}.mp4`;
-
       const a = document.createElement('a');
-      a.href = url;
-      a.setAttribute('download', fileName);
+      a.href = downloadEndpoint;
+      a.setAttribute('download', `${cleanTitle}.mp4`);
       a.setAttribute('target', '_blank');
       document.body.appendChild(a);
       a.click();
@@ -646,9 +631,10 @@
 
     function copyStreamUrl() {
       haptic();
-      const url = getResolvedTargetUrl();
-      if (!url) return;
-      navigator.clipboard.writeText(url).then(() => {
+      if (!currentItem) return;
+      const cleanTitle = (currentItem.title || "video").replace(/[^a-zA-Z0-9]/g, '_');
+      const downloadEndpoint = `${API_BASE_URL}/api/download?id=${currentItem.id}&filename=${cleanTitle}.mp4`;
+      navigator.clipboard.writeText(downloadEndpoint).then(() => {
         const toast = document.getElementById('toast');
         toast.classList.remove('hidden');
         setTimeout(() => toast.classList.add('hidden'), 2000);
@@ -660,4 +646,4 @@
     fetchVaultData();
   </script>
 </body>
-  </html>
+        </html>
