@@ -1,6 +1,7 @@
 import os
 import requests
 from fastapi import FastAPI, Query
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Nexus Vault Master Engine")
@@ -17,17 +18,21 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY", "efeb831b3735905153e997765ea5b2de")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
-# Direct High-Speed Buffer-Free MP4 Fast CDN Streams
-FAST_MP4_STREAMS = [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4"
+# 100% Active, Open-Source MP4 Direct Files (Zero Google Storage / Zero AccessDenied)
+DIRECT_OPEN_MP4 = [
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "https://vjs.zencdn.net/v/oceans.mp4"
 ]
 
 @app.get("/")
 def home():
     return {"status": "active", "core": "Nexus Vault High Speed Core"}
+
+@app.get("/api/download")
+def download_stream(id: int = Query(...), filename: str = Query("video.mp4")):
+    """Direct clean download redirect avoiding browser XML cache"""
+    stream_url = DIRECT_OPEN_MP4[id % len(DIRECT_OPEN_MP4)]
+    return RedirectResponse(url=stream_url)
 
 @app.get("/api/tv_details")
 def tv_details(tv_id: int):
@@ -100,8 +105,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
             badge_label = f"{dub_lang.upper()} DUB" if sub == "dubbed_hub" and dub_lang != "all" else (sub.upper() if sub not in ["all", "dubbed_hub"] else category.upper())
             badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
-            base_stream = FAST_MP4_STREAMS[idx % len(FAST_MP4_STREAMS)]
-            stream_url = f"{base_stream}?nexus_id={item_id}"
+            stream_url = DIRECT_OPEN_MP4[idx % len(DIRECT_OPEN_MP4)]
             
             primary_aud = f"{dub_lang.capitalize()} Dubbed" if sub == "dubbed_hub" and dub_lang != "all" else ("Tamil Master" if sub in ["tamil", "dubbed_hub"] else "Original Audio")
 
@@ -180,8 +184,7 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                 continue
 
             badge_name = sub.upper() if sub != "all" else category.upper()
-            base_stream = FAST_MP4_STREAMS[idx % len(FAST_MP4_STREAMS)]
-            stream_url = f"{base_stream}?nexus_id={item_id}"
+            stream_url = DIRECT_OPEN_MP4[idx % len(DIRECT_OPEN_MP4)]
 
             if title and poster:
                 items.append({
