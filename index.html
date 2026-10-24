@@ -64,17 +64,16 @@
     </div>
   </header>
 
-  <!-- Search Section -->
+  <!-- Search Section with Live TMDB Search -->
   <div class="px-4 pt-3 pb-1 relative z-30">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
-      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search Master Titles, Dubs, Cast..." 
+      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search any movie, series, cast..." 
         class="w-full bg-[#0E0E14] border border-white/10 rounded-2xl py-3 pl-10 pr-9 text-xs placeholder:text-white/30 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition">
       <button id="searchClearBtn" onclick="clearSearch()" class="absolute right-3 top-3 text-white/40 hover:text-white hidden w-5 h-5 flex items-center justify-center">
         <i class="fa-solid fa-circle-xmark text-xs"></i>
       </button>
     </div>
-
     <div id="searchSuggestions" class="absolute left-4 right-4 top-[50px] bg-[#0E0E15] border border-white/10 rounded-2xl shadow-2xl p-2 hidden max-h-60 overflow-y-auto no-scrollbar gpu"></div>
   </div>
 
@@ -115,7 +114,7 @@
           <span class="w-1 h-1 rounded-full bg-white/20"></span>
           <span id="modalRuntime" class="text-xs text-white/50 font-mono">Runtime</span>
         </div>
-        <p id="modalSubs" class="text-[10px] text-emerald-400 font-mono mt-1"><i class="fa-solid fa-closed-captioning mr-1"></i>Subs: English</p>
+        <p id="modalSubs" class="text-[10px] text-emerald-400 font-mono mt-1"><i class="fa-solid fa-closed-captioning mr-1"></i>Subs: English, Tamil</p>
       </div>
       <button onclick="closeSheet()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 active:scale-95">
         <i class="fa-solid fa-xmark text-xs"></i>
@@ -138,7 +137,7 @@
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Quality Selection (Includes 480p SD) -->
+    <!-- Quality Selection -->
     <div class="mt-4">
       <div class="flex items-center justify-between">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
@@ -153,8 +152,8 @@
         <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
           <i class="fa-solid fa-play text-red-600"></i> <span id="streamBtnText">Stream in MX</span>
         </button>
-        <button onclick="launch1DM()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
-          <i class="fa-solid fa-download"></i> <span id="downloadBtnText">Download Now</span>
+        <button onclick="launchDirectDownload()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
+          <i class="fa-solid fa-download"></i> <span id="downloadBtnText">Download Direct</span>
         </button>
       </div>
       
@@ -175,6 +174,7 @@
     if (tg) { tg.expand(); tg.ready(); }
 
     let vaultData = [];
+    let searchDebounceTimer = null;
     const subFilters = {
       movies: [
         { label: "All Movies", key: "all" },
@@ -239,7 +239,7 @@
     async function fetchVaultData() {
       renderShimmerSkeletons();
       try {
-        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}`);
+        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}&dub_lang=${currentNestedDub}`);
         if (!response.ok) throw new Error("API error");
         const data = await response.json();
         vaultData = data.results || [];
@@ -269,28 +269,17 @@
       const grid = document.getElementById('mediaGrid');
       grid.innerHTML = '';
 
-      const filtered = vaultData.filter(item => {
-        if (currentSub === 'dubbed_hub' && currentNestedDub !== 'all' && item.dubLanguage !== currentNestedDub) {
-          return false;
-        }
-        if (currentSearch) {
-          const q = currentSearch.toLowerCase();
-          return item.title.toLowerCase().includes(q) || item.subInfo.toLowerCase().includes(q);
-        }
-        return true;
-      });
-
-      if (filtered.length === 0) {
+      if (vaultData.length === 0) {
         grid.innerHTML = `
           <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
             <i class="fa-solid fa-magnifying-glass text-2xl mb-2 opacity-30"></i><br>
-            <span>No titles found.</span><br>
+            <span>No titles found for "${currentSearch}".</span><br>
             <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Filter</button>
           </div>`;
         return;
       }
 
-      filtered.forEach(item => {
+      vaultData.forEach(item => {
         grid.innerHTML += `
           <div class="media-card cursor-pointer gpu" onclick="openMediaModal(${item.id})">
             <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('${item.img}');">
@@ -313,36 +302,49 @@
 
       if (currentSearch.length > 0) {
         clearBtn.classList.remove('hidden');
-        renderSearchSuggestions(currentSearch);
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          performGlobalSearch(currentSearch);
+        }, 350);
       } else {
         clearBtn.classList.add('hidden');
         suggestions.classList.add('hidden');
+        fetchVaultData();
       }
-      renderMediaGrid();
     }
 
-    function renderSearchSuggestions(query) {
+    async function performGlobalSearch(query) {
       const suggestions = document.getElementById('searchSuggestions');
-      const q = query.toLowerCase();
-      const matches = vaultData.filter(i => i.title.toLowerCase().includes(q) || i.subInfo.toLowerCase().includes(q));
+      renderShimmerSkeletons();
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/search?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        const results = data.results || [];
 
-      if (matches.length === 0) {
-        suggestions.classList.add('hidden');
-        return;
+        if (results.length > 0) {
+          vaultData = results;
+          renderMediaGrid();
+          
+          suggestions.innerHTML = '';
+          results.slice(0, 5).forEach(item => {
+            suggestions.innerHTML += `
+              <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer" onclick="selectSuggestion(${item.id})">
+                <img src="${item.img}" class="w-8 h-10 object-cover rounded-lg">
+                <div class="overflow-hidden">
+                  <h5 class="text-xs font-bold truncate text-white">${item.title}</h5>
+                  <span class="text-[10px] text-white/50">${item.year} • ${item.badge}</span>
+                </div>
+              </div>`;
+          });
+          suggestions.classList.remove('hidden');
+        } else {
+          suggestions.classList.add('hidden');
+          vaultData = [];
+          renderMediaGrid();
+        }
+      } catch (e) {
+        console.error("Search error", e);
       }
-
-      suggestions.innerHTML = '';
-      matches.slice(0, 4).forEach(item => {
-        suggestions.innerHTML += `
-          <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer" onclick="selectSuggestion(${item.id})">
-            <img src="${item.img}" class="w-8 h-10 object-cover rounded-lg">
-            <div class="overflow-hidden">
-              <h5 class="text-xs font-bold truncate text-white">${item.title}</h5>
-              <span class="text-[10px] text-white/50">${item.year} • ${item.badge}</span>
-            </div>
-          </div>`;
-      });
-      suggestions.classList.remove('hidden');
     }
 
     function selectSuggestion(id) {
@@ -356,8 +358,6 @@
       document.getElementById('searchClearBtn').classList.add('hidden');
       document.getElementById('searchSuggestions').classList.add('hidden');
       currentSearch = '';
-      currentSub = 'all';
-      renderSubPills();
       fetchVaultData();
     }
 
@@ -403,7 +403,7 @@
         el.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
       });
       btn.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap';
-      renderMediaGrid();
+      fetchVaultData();
     }
 
     function openMediaModal(itemId) {
@@ -583,20 +583,20 @@
     function launchMX() {
       haptic();
       if (!currentStreamUrl) return;
-      // MX Player direct intent
       window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
     }
 
-    function launch1DM() {
+    function launchDirectDownload() {
       haptic();
       if (!currentStreamUrl) return;
-      // Direct Download intent trigger (1DM default grabber or direct download prompt)
-      const a = document.createElement('a');
-      a.href = currentStreamUrl;
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Direct Download file prompt
+      const link = document.createElement('a');
+      link.href = currentStreamUrl;
+      link.setAttribute('download', 'video.mp4');
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function copyStreamUrl() {
@@ -614,4 +614,4 @@
     fetchVaultData();
   </script>
 </body>
-          </html>
+  </html>
