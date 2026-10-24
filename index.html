@@ -84,8 +84,17 @@
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
   </div>
 
-  <!-- Sub Pills -->
+  <!-- Sub Pills (Now includes Dubbed Hub in ALL Categories) -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
+
+  <!-- Nested Dubbed Hub Sub-languages (Universal) -->
+  <div id="nestedDubContainer" class="px-4 pb-2.5 flex gap-2 overflow-x-auto no-scrollbar" style="display: none;">
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this, 'all')">All Dubs</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'tamil')">Tamil Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'telugu')">Telugu Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'hindi')">Hindi Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'malayalam')">Malayalam Dubbed</button>
+  </div>
 
   <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
@@ -111,7 +120,7 @@
       </button>
     </div>
 
-    <!-- Episodes Multi-Select Section (Dynamic Seasons & Real Episodes) -->
+    <!-- Episodes Multi-Select Section -->
     <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
       <div class="flex items-center justify-between mb-2">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes</label>
@@ -123,7 +132,7 @@
 
     <!-- Audio Selection -->
     <div class="mt-4">
-      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Selected Audio Track</label>
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
@@ -165,6 +174,8 @@
 
     let vaultData = [];
     let searchDebounceTimer = null;
+    
+    // Dubbed Hub is now present across ALL 4 categories!
     const subFilters = {
       movies: [
         { label: "All Movies", key: "all" },
@@ -173,26 +184,31 @@
         { label: "Telugu", key: "telugu" },
         { label: "Kannada", key: "kannada" },
         { label: "Hindi", key: "hindi" },
-        { label: "Hollywood", key: "hollywood" }
+        { label: "Hollywood", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
       ],
       series: [
         { label: "All Series", key: "all" },
         { label: "Tamil Web Series", key: "tamil" },
         { label: "Hindi Shows", key: "hindi" },
-        { label: "English Shows", key: "hollywood" }
+        { label: "English Shows", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
       ],
       kdrama: [
         { label: "All K-Drama", key: "all" },
-        { label: "Original Korean", key: "korean" }
+        { label: "Original Korean", key: "korean" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
       ],
       anime: [
         { label: "All Anime", key: "all" },
-        { label: "Japanese (Sub/Dub)", key: "subbed" }
+        { label: "Japanese (Sub)", key: "subbed" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
       ]
     };
 
     let currentTab = 'movies';
     let currentSub = 'all';
+    let currentNestedDub = 'all';
     let currentSearch = '';
     let currentStreamUrl = "";
     let activeSeasonsList = [];
@@ -231,14 +247,14 @@
     async function fetchVaultData() {
       renderShimmerSkeletons();
       try {
-        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}`);
+        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}&dub_lang=${currentNestedDub}`);
         if (!response.ok) throw new Error("API error");
         const data = await response.json();
         vaultData = data.results || [];
         document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5';
         document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD';
       } catch (err) {
-        console.warn("Backend sleeping or offline", err);
+        console.warn("Backend offline", err);
         document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5';
         document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>CACHED';
       }
@@ -266,7 +282,7 @@
         grid.innerHTML = `
           <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
             <i class="fa-solid fa-magnifying-glass text-2xl mb-2 opacity-30"></i><br>
-            <span>No titles found in this section.</span><br>
+            <span>No results found in this section.</span><br>
             <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Filter</button>
           </div>`;
         return;
@@ -298,7 +314,7 @@
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(() => {
           performStrictSearch(currentSearch);
-        }, 350);
+        }, 300);
       } else {
         clearBtn.classList.add('hidden');
         suggestions.classList.add('hidden');
@@ -336,7 +352,7 @@
           renderMediaGrid();
         }
       } catch (e) {
-        console.error("Strict Search Error", e);
+        console.error("Search Error", e);
       }
     }
 
@@ -362,6 +378,8 @@
 
       currentTab = tabKey;
       currentSub = 'all';
+      currentNestedDub = 'all';
+      document.getElementById('nestedDubContainer').style.display = 'none';
       renderSubPills();
       fetchVaultData();
     }
@@ -369,18 +387,36 @@
     function switchSubPill(btn, filterKey) {
       haptic();
       currentSub = filterKey;
+      currentNestedDub = 'all';
       Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
-      updateSearchPlaceholder();
 
-      if (currentSearch.length > 0) {
-        performStrictSearch(currentSearch);
+      const nestedContainer = document.getElementById('nestedDubContainer');
+      if (filterKey === 'dubbed_hub') {
+        nestedContainer.style.display = 'flex';
+        Array.from(nestedContainer.children).forEach((c, idx) => {
+          c.className = idx === 0 
+            ? 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap'
+            : 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+        });
       } else {
-        fetchVaultData();
+        nestedContainer.style.display = 'none';
       }
+      updateSearchPlaceholder();
+      fetchVaultData();
     }
 
-    function openMediaModal(itemId) {
+    function selectNestedDub(btn, dubLang) {
+      haptic();
+      currentNestedDub = dubLang;
+      Array.from(btn.parentElement.children).forEach(el => {
+        el.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+      });
+      btn.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap';
+      fetchVaultData();
+    }
+
+    async function openMediaModal(itemId) {
       haptic();
       const item = vaultData.find(i => i.id === itemId);
       if (!item) return;
@@ -397,11 +433,19 @@
       document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${item.subs}`;
 
       const seriesSection = document.getElementById('seriesSection');
-      if (item.type === 'tv' && item.seasons_list && item.seasons_list.length > 0) {
+      if (item.type === 'tv') {
         seriesSection.classList.remove('hidden');
-        activeSeasonsList = item.seasons_list;
-        currentSeasonIndex = 0;
-        renderDynamicSeasons();
+        document.getElementById('seasonPills').innerHTML = '<span class="text-[10px] text-white/40">Loading seasons...</span>';
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/tv_details?tv_id=${item.id}`);
+          const sData = await res.json();
+          activeSeasonsList = sData.seasons || [{season_number: 1, name: "Season 1", episode_count: 8}];
+          currentSeasonIndex = 0;
+          renderDynamicSeasons();
+        } catch(e) {
+          activeSeasonsList = [{season_number: 1, name: "Season 1", episode_count: 8}];
+          renderDynamicSeasons();
+        }
       } else {
         seriesSection.classList.add('hidden');
         totalEpisodesCount = 1;
@@ -535,20 +579,21 @@
       const count = selectedEpisodes.length;
       const curQ = currentQualities[selectedQualityIndex];
       const sizeLabel = curQ ? curQ.size : '';
+      const selectedAudio = currentAudioList[selectedAudioIndex] ? currentAudioList[selectedAudioIndex].lang : '';
 
       if (totalEpisodesCount > 1) {
         if (count === 1) {
           document.getElementById('streamBtnText').innerText = `Stream EP ${selectedEpisodes[0]}`;
-          document.getElementById('downloadBtnText').innerText = `Download (${sizeLabel})`;
+          document.getElementById('downloadBtnText').innerText = `Download [${selectedAudio}] (${sizeLabel})`;
           document.getElementById('calculatedSizeText').innerText = `Est: ${sizeLabel}`;
         } else {
           document.getElementById('streamBtnText').innerText = `Play Queue (${count})`;
-          document.getElementById('downloadBtnText').innerText = `Download (${count} EPs)`;
+          document.getElementById('downloadBtnText').innerText = `Download [${count} EPs] (${sizeLabel})`;
           document.getElementById('calculatedSizeText').innerText = `Total: ~${count} items`;
         }
       } else {
         document.getElementById('streamBtnText').innerText = "Stream in MX";
-        document.getElementById('downloadBtnText').innerText = `Download (${sizeLabel})`;
+        document.getElementById('downloadBtnText').innerText = `Download [${selectedAudio}] (${sizeLabel})`;
         document.getElementById('calculatedSizeText').innerText = `File Size: ${sizeLabel}`;
       }
     }
@@ -572,7 +617,6 @@
     function triggerDirectDownload() {
       haptic();
       if (!currentStreamUrl) return;
-      // Direct file downloader
       const a = document.createElement('a');
       a.href = currentStreamUrl;
       a.setAttribute('download', 'video.mp4');
