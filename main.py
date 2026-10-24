@@ -30,18 +30,12 @@ def home():
 
 @app.get("/api/media")
 def get_media(category: str = Query("movies"), sub: str = Query("all")):
-    """
-    Fetch trending/top items from TMDB based on tab and language filters.
-    """
     items = []
-    
-    # Language & Media Type mapping
     media_type = "tv" if category in ["series", "kdrama", "anime"] else "movie"
     
     params = {
         "api_key": TMDB_API_KEY,
         "sort_by": "popularity.desc",
-        "vote_count.gte": 50,
         "page": 1
     }
     
@@ -49,7 +43,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
         params["with_original_language"] = "ko"
     elif category == "anime":
         params["with_original_language"] = "ja"
-        params["with_genres"] = "16" # Animation genre id
+        params["with_genres"] = "16"
     elif category == "movies":
         if sub == "tamil":
             params["with_original_language"] = "ta"
@@ -63,6 +57,14 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
             params["with_original_language"] = "hi"
         elif sub == "hollywood":
             params["with_original_language"] = "en"
+            params["vote_count.gte"] = 30
+    elif category == "series":
+        if sub == "tamil":
+            params["with_original_language"] = "ta"
+        elif sub == "hindi":
+            params["with_original_language"] = "hi"
+        elif sub == "hollywood":
+            params["with_original_language"] = "en"
     
     endpoint = f"{TMDB_BASE_URL}/discover/{media_type}"
     
@@ -70,7 +72,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
         res = requests.get(endpoint, params=params, timeout=10).json()
         raw_results = res.get("results", [])
         
-        for idx, item in enumerate(raw_results[:12]):
+        for idx, item in enumerate(raw_results[:14]):
             title = item.get("title") or item.get("name") or "Unknown Title"
             poster_path = item.get("poster_path")
             img_url = f"{TMDB_IMAGE_BASE}{poster_path}" if poster_path else "https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500"
@@ -79,10 +81,17 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
             rating = str(round(item.get("vote_average", 7.5), 1))
             
             badge_label = sub.upper() if sub not in ["all", "dubbed_hub"] else ("TAMIL DUB" if sub == "dubbed_hub" else category.upper())
-            badge_bg = "bg-red-600" if "DUB" in badge_label else "bg-zinc-800"
+            badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
             stream_url = DEMO_STREAMS[idx % len(DEMO_STREAMS)]
             
+            qualities = [
+                {"res": "480p SD", "size": "450 MB" if media_type == "movie" else "180 MB/ep"},
+                {"res": "720p HD", "size": "850 MB" if media_type == "movie" else "380 MB/ep"},
+                {"res": "1080p FHD", "size": "2.2 GB" if media_type == "movie" else "850 MB/ep"},
+                {"res": "4K UHD", "size": "5.6 GB" if media_type == "movie" else "2.1 GB/ep"}
+            ]
+
             items.append({
                 "id": item.get("id", idx + 1),
                 "title": title,
@@ -95,18 +104,14 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
                 "rating": rating,
                 "runtime": "Season 1" if media_type == "tv" else "2h 10m",
                 "subs": "English, Tamil",
-                "subInfo": f"{category.capitalize()} • Trending",
+                "subInfo": f"{sub.capitalize() if sub != 'all' else category.capitalize()} • Trending",
                 "img": img_url,
                 "streamUrl": stream_url,
                 "audios": [
-                    {"lang": "Tamil Dubbed" if sub == "dubbed_hub" else "Tamil Master", "codec": "Dolby 5.1", "type": "51"},
-                    {"lang": "Original Track", "codec": "Dolby Atmos", "type": "atmos"}
+                    {"lang": "Tamil Master" if sub in ["tamil", "dubbed_hub"] else "Original Audio", "codec": "Dolby 5.1", "type": "51"},
+                    {"lang": "Dolby Atmos Track", "codec": "Dolby Atmos", "type": "atmos"}
                 ],
-                "qualities": [
-                    {"res": "720p HD", "size": "850 MB" if media_type == "movie" else "380 MB/ep"},
-                    {"res": "1080p FHD", "size": "2.2 GB" if media_type == "movie" else "850 MB/ep"},
-                    {"res": "4K UHD", "size": "5.6 GB" if media_type == "movie" else "2.1 GB/ep"}
-                ],
+                "qualities": qualities,
                 "type": media_type,
                 "seasons": 1 if media_type == "tv" else None,
                 "episodes": 8 if media_type == "tv" else None
@@ -118,9 +123,6 @@ def get_media(category: str = Query("movies"), sub: str = Query("all")):
 
 @app.get("/api/search")
 def search_tmdb(query: str):
-    """
-    Live TMDB search query endpoint.
-    """
     if not query:
         return {"results": []}
 
