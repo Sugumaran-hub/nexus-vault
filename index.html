@@ -34,7 +34,7 @@
     .codec-51 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; }
     .codec-stereo { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #E4E4E7; }
 
-    .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
+    .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
     .sheet-up { transform: translate3d(0, 0%, 0); transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -58,13 +58,13 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>ACTIVE
+      <span id="apiStatusBadge" class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD
       </span>
     </div>
   </header>
 
-  <!-- Search Section with Clear & Auto Suggestions -->
+  <!-- Search Section -->
   <div class="px-4 pt-3 pb-1 relative z-30">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
@@ -102,7 +102,7 @@
   <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
 
-  <!-- Bottom Action Sheet -->
+  <!-- Bottom Sheet Modal -->
   <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeSheet()"></div>
   
   <div id="mediaModal" class="fixed inset-x-0 bottom-0 z-50 bg-[#0A0A0F] border-t border-white/10 rounded-t-[32px] p-5 pb-8 sheet-down shadow-2xl max-h-[88vh] overflow-y-auto no-scrollbar gpu">
@@ -171,117 +171,11 @@
   </div>
 
   <script>
+    const API_BASE_URL = "https://nexus-vault-api.onrender.com";
     const tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready(); }
 
-    const vaultData = [
-      {
-        id: 1,
-        title: "Deadpool & Wolverine",
-        category: "movies",
-        subCategory: "dubbed_hub",
-        dubLanguage: "tamil",
-        badge: "TAMIL DUB",
-        badgeBg: "bg-red-600",
-        year: "2024",
-        rating: "8.1",
-        runtime: "2h 08m",
-        subs: "English, Tamil",
-        subInfo: "Hollywood • Action",
-        img: "https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500",
-        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        audios: [
-          { lang: "Tamil", codec: "Dolby 5.1", type: "51" },
-          { lang: "English", codec: "Dolby Atmos", type: "atmos" }
-        ],
-        qualities: [
-          { res: "720p HD", size: "850 MB" },
-          { res: "1080p FHD", size: "2.1 GB" },
-          { res: "4K UHD", size: "6.8 GB" }
-        ],
-        type: "movie"
-      },
-      {
-        id: 2,
-        title: "Baashha",
-        category: "movies",
-        subCategory: "tamil",
-        dubLanguage: "none",
-        badge: "TAMIL",
-        badgeBg: "bg-amber-500 text-black",
-        year: "1995",
-        rating: "8.6",
-        runtime: "2h 25m",
-        subs: "English",
-        subInfo: "Tamil Classic Remaster",
-        img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500",
-        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        audios: [
-          { lang: "Tamil Master", codec: "DTS 5.1", type: "51" },
-          { lang: "Original Track", codec: "Stereo 2.0", type: "stereo" }
-        ],
-        qualities: [
-          { res: "720p HD", size: "950 MB" },
-          { res: "1080p Remaster", size: "2.4 GB" }
-        ],
-        type: "movie"
-      },
-      {
-        id: 3,
-        title: "Squid Game S2",
-        category: "kdrama",
-        subCategory: "dubbed_hub",
-        dubLanguage: "tamil",
-        badge: "K-DRAMA",
-        badgeBg: "bg-purple-600",
-        year: "2024",
-        rating: "8.0",
-        runtime: "Season 2",
-        subs: "English, Tamil",
-        subInfo: "K-Drama • Thriller",
-        img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500",
-        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        audios: [
-          { lang: "Tamil Dubbed", codec: "Stereo 2.0", type: "stereo" },
-          { lang: "Korean Org", codec: "Dolby 5.1", type: "51" }
-        ],
-        qualities: [
-          { res: "720p HD", size: "420 MB/ep" },
-          { res: "1080p FHD", size: "1.1 GB/ep" }
-        ],
-        type: "series",
-        seasons: 2,
-        episodes: 8
-      },
-      {
-        id: 4,
-        title: "Demon Slayer",
-        category: "anime",
-        subCategory: "dubbed_hub",
-        dubLanguage: "tamil",
-        badge: "ANIME",
-        badgeBg: "bg-emerald-600",
-        year: "2024",
-        rating: "8.8",
-        runtime: "Season 4",
-        subs: "English, Tamil",
-        subInfo: "Anime • Hashira Arc",
-        img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500",
-        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        audios: [
-          { lang: "Tamil Dubbed", codec: "Stereo 2.0", type: "stereo" },
-          { lang: "Japanese Master", codec: "FLAC Lossless", type: "atmos" }
-        ],
-        qualities: [
-          { res: "720p HD", size: "260 MB/ep" },
-          { res: "1080p FHD", size: "650 MB/ep" }
-        ],
-        type: "series",
-        seasons: 4,
-        episodes: 8
-      }
-    ];
-
+    let vaultData = [];
     const subFilters = {
       movies: [
         { label: "All Movies", key: "all" },
@@ -327,6 +221,37 @@
 
     function haptic() {
       if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function renderShimmerSkeletons() {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        grid.innerHTML += `
+          <div class="media-card shimmer h-56 rounded-2xl relative overflow-hidden">
+            <div class="absolute bottom-3 left-3 right-3 space-y-2">
+              <div class="h-3 bg-white/10 rounded w-3/4"></div>
+              <div class="h-2 bg-white/10 rounded w-1/2"></div>
+            </div>
+          </div>`;
+      }
+    }
+
+    async function fetchVaultData() {
+      renderShimmerSkeletons();
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}`);
+        if (!response.ok) throw new Error("API error");
+        const data = await response.json();
+        vaultData = data.results || [];
+        document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5';
+        document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD';
+      } catch (err) {
+        console.warn("Backend sleeping or offline, using cache fallback", err);
+        document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5';
+        document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>CACHED';
+      }
+      renderMediaGrid();
     }
 
     function renderSubPills() {
@@ -452,7 +377,7 @@
       currentNestedDub = 'all';
       document.getElementById('nestedDubContainer').style.display = 'none';
       renderSubPills();
-      renderMediaGrid();
+      fetchVaultData();
     }
 
     function switchSubPill(btn, filterKey) {
@@ -682,9 +607,9 @@
       });
     }
 
-    // Init
+    // Initial Execution
     renderSubPills();
-    renderMediaGrid();
+    fetchVaultData();
   </script>
 </body>
   </html>
