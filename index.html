@@ -1,146 +1,615 @@
-import os
-import requests
-from fastapi import FastAPI, Query
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI(title="Nexus Vault Core Engine")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-TMDB_API_KEY = os.getenv("TMDB_API_KEY", "efeb831b3735905153e997765ea5b2de")
-TMDB_BASE_URL = "https://api.themoviedb.org/3"
-TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
-
-DEMO_STREAMS = [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
-]
-
-@app.get("/")
-def home():
-    return {"status": "active", "core": "Nexus Vault Stream Resolver Engine", "tmdb": "connected"}
-
-@app.get("/api/media")
-def get_media(category: str = Query("movies"), sub: str = Query("all")):
-    """
-    Fetch trending/top items from TMDB based on tab and language filters.
-    """
-    items = []
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Nexus Vault</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; touch-action: manipulation; }
+    body { background-color: #040407; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Roboto, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    # Language & Media Type mapping
-    media_type = "tv" if category in ["series", "kdrama", "anime"] else "movie"
+    .gpu { transform: translate3d(0, 0, 0); will-change: transform, opacity; backface-visibility: hidden; }
+    .glass-nav { background: rgba(5, 5, 8, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
     
-    params = {
-        "api_key": TMDB_API_KEY,
-        "sort_by": "popularity.desc",
-        "vote_count.gte": 50,
-        "page": 1
+    .top-tab { color: rgba(255, 255, 255, 0.4); font-weight: 700; font-size: 14px; position: relative; padding-bottom: 10px; transition: color 0.15s ease; cursor: pointer; }
+    .top-tab.active { color: #FFFFFF; font-weight: 900; }
+    .top-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2.5px; background: #E50914; border-radius: 4px; box-shadow: 0 0 12px #E50914; }
+    
+    .sub-pill { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.6); font-size: 11px; padding: 6px 14px; border-radius: 12px; font-weight: 600; transition: all 0.15s ease; }
+    .sub-pill.active { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); color: #FFFFFF; font-weight: 800; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    
+    .media-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 18px; overflow: hidden; contain: paint layout; }
+    .media-card:active { transform: scale(0.97); }
+
+    .ep-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.7); font-size: 11px; padding: 7px 12px; border-radius: 10px; font-weight: 600; }
+    .ep-pill.selected { background: #E50914; border-color: #E50914; color: #FFF; font-weight: 800; box-shadow: 0 2px 10px rgba(229, 9, 20, 0.4); }
+
+    .codec-badge { font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-family: monospace; }
+    .codec-atmos { background: rgba(147, 51, 234, 0.2); border: 1px solid rgba(147, 51, 234, 0.4); color: #C084FC; }
+    .codec-51 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; }
+    .codec-stereo { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #E4E4E7; }
+
+    .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .sheet-up { transform: translate3d(0, 0%, 0); transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+    .sheet-down { transform: translate3d(0, 100%, 0); transition: transform 0.22s ease-in; }
+  </style>
+</head>
+<body class="pb-28 select-none">
+
+  <!-- Header -->
+  <header class="p-4 flex items-center justify-between sticky top-0 z-40 glass-nav gpu">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-red-800 flex items-center justify-center shadow-lg shadow-red-900/40">
+        <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5 leading-none">
+          <span class="text-white font-black text-lg tracking-wider">NEXUS</span>
+          <span class="bg-red-600/20 text-red-500 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-red-500/30">VAULT</span>
+        </div>
+        <span class="text-[9px] text-white/40 tracking-widest uppercase mt-0.5 block">Zero-Lag Private Core</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="apiStatusBadge" class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD
+      </span>
+    </div>
+  </header>
+
+  <!-- Search Section -->
+  <div class="px-4 pt-3 pb-1 relative z-30">
+    <div class="relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
+      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search Master Titles, Dubs, Cast..." 
+        class="w-full bg-[#0E0E14] border border-white/10 rounded-2xl py-3 pl-10 pr-9 text-xs placeholder:text-white/30 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition">
+      <button id="searchClearBtn" onclick="clearSearch()" class="absolute right-3 top-3 text-white/40 hover:text-white hidden w-5 h-5 flex items-center justify-center">
+        <i class="fa-solid fa-circle-xmark text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Live Search Suggestion Dropdown -->
+    <div id="searchSuggestions" class="absolute left-4 right-4 top-[50px] bg-[#0E0E15] border border-white/10 rounded-2xl shadow-2xl p-2 hidden max-h-60 overflow-y-auto no-scrollbar gpu"></div>
+  </div>
+
+  <!-- Master Categories -->
+  <div class="px-4 border-b border-white/5 flex gap-7 overflow-x-auto no-scrollbar pt-2">
+    <button class="top-tab active whitespace-nowrap" onclick="switchMainTab(this, 'movies')">Movies</button>
+    <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'series')">Web Series</button>
+    <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'kdrama')">K-Drama</button>
+    <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
+  </div>
+
+  <!-- Sub Pills -->
+  <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
+
+  <!-- Nested Dubbed Hub Sub-languages -->
+  <div id="nestedDubContainer" class="px-4 pb-2.5 flex gap-2 overflow-x-auto no-scrollbar" style="display: none;">
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this, 'all')">All Dubs</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'tamil')">Tamil Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'telugu')">Telugu Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'hindi')">Hindi Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'malayalam')">Malayalam Dubbed</button>
+  </div>
+
+  <!-- Media Grid -->
+  <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
+
+  <!-- Bottom Sheet Modal -->
+  <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeSheet()"></div>
+  
+  <div id="mediaModal" class="fixed inset-x-0 bottom-0 z-50 bg-[#0A0A0F] border-t border-white/10 rounded-t-[32px] p-5 pb-8 sheet-down shadow-2xl max-h-[88vh] overflow-y-auto no-scrollbar gpu">
+    <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4 cursor-pointer" onclick="closeSheet()"></div>
+    
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 id="modalTitle" class="text-lg font-black text-white">Title</h2>
+        <div class="flex items-center gap-2 mt-1">
+          <span id="modalMeta" class="text-xs text-white/50 font-medium">Meta</span>
+          <span class="w-1 h-1 rounded-full bg-white/20"></span>
+          <span id="modalRuntime" class="text-xs text-white/50 font-mono">Runtime</span>
+        </div>
+        <p id="modalSubs" class="text-[10px] text-emerald-400 font-mono mt-1"><i class="fa-solid fa-closed-captioning mr-1"></i>Subs: English</p>
+      </div>
+      <button onclick="closeSheet()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 active:scale-95">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Episodes Multi-Select Section -->
+    <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes</label>
+        <button id="selectAllBtn" onclick="toggleSelectAll()" class="text-[10px] font-bold text-red-400 bg-red-600/10 px-2.5 py-1 rounded border border-red-500/20">Select All</button>
+      </div>
+      <div id="seasonPills" class="flex gap-2 overflow-x-auto no-scrollbar mb-2"></div>
+      <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+    </div>
+
+    <!-- Audio Selection with Codec Badges -->
+    <div class="mt-4">
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
+      <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
+    </div>
+
+    <!-- Quality Selection -->
+    <div class="mt-4">
+      <div class="flex items-center justify-between">
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
+        <span id="calculatedSizeText" class="text-[10px] font-mono text-emerald-400 font-bold"></span>
+      </div>
+      <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-6 space-y-2.5">
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
+          <i class="fa-solid fa-play text-red-600"></i> <span id="streamBtnText">Stream in MX</span>
+        </button>
+        <button onclick="launch1DM()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
+          <i class="fa-solid fa-download"></i> <span id="downloadBtnText">1DM Download</span>
+        </button>
+      </div>
+      
+      <button onclick="copyStreamUrl()" class="w-full bg-white/5 border border-white/10 text-white/80 font-mono py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition">
+        <i class="fa-regular fa-copy text-white/50"></i> Copy Direct Stream Link
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Alert -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-2xl z-50 hidden transition-all">
+    Direct Stream Link Copied!
+  </div>
+
+  <script>
+    const API_BASE_URL = "https://nexus-vault-api.onrender.com";
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) { tg.expand(); tg.ready(); }
+
+    let vaultData = [];
+    const subFilters = {
+      movies: [
+        { label: "All Movies", key: "all" },
+        { label: "Tamil", key: "tamil" },
+        { label: "Malayalam", key: "malayalam" },
+        { label: "Telugu", key: "telugu" },
+        { label: "Kannada", key: "kannada" },
+        { label: "Hindi", key: "hindi" },
+        { label: "Hollywood", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+      ],
+      series: [
+        { label: "All Series", key: "all" },
+        { label: "Tamil Web Series", key: "tamil" },
+        { label: "Hindi Shows", key: "hindi" },
+        { label: "English Shows", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+      ],
+      kdrama: [
+        { label: "All K-Drama", key: "all" },
+        { label: "Tamil Dubbed", key: "dubbed_hub" },
+        { label: "Original Korean", key: "korean" }
+      ],
+      anime: [
+        { label: "All Anime", key: "all" },
+        { label: "Tamil Dubbed", key: "dubbed_hub" },
+        { label: "English Dubbed", key: "english_dub" },
+        { label: "Japanese (Sub)", key: "subbed" }
+      ]
+    };
+
+    let currentTab = 'movies';
+    let currentSub = 'all';
+    let currentNestedDub = 'all';
+    let currentSearch = '';
+    let currentStreamUrl = "";
+    let selectedEpisodes = [1];
+    let totalEpisodesCount = 0;
+    let currentQualities = [];
+    let selectedQualityIndex = 0;
+    let currentAudioList = [];
+    let selectedAudioIndex = 0;
+
+    function haptic() {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
-    
-    if category == "kdrama":
-        params["with_original_language"] = "ko"
-    elif category == "anime":
-        params["with_original_language"] = "ja"
-        params["with_genres"] = "16" # Animation genre id
-    elif category == "movies":
-        if sub == "tamil":
-            params["with_original_language"] = "ta"
-        elif sub == "malayalam":
-            params["with_original_language"] = "ml"
-        elif sub == "telugu":
-            params["with_original_language"] = "te"
-        elif sub == "kannada":
-            params["with_original_language"] = "kn"
-        elif sub == "hindi":
-            params["with_original_language"] = "hi"
-        elif sub == "hollywood":
-            params["with_original_language"] = "en"
-    
-    endpoint = f"{TMDB_BASE_URL}/discover/{media_type}"
-    
-    try:
-        res = requests.get(endpoint, params=params, timeout=10).json()
-        raw_results = res.get("results", [])
-        
-        for idx, item in enumerate(raw_results[:12]):
-            title = item.get("title") or item.get("name") or "Unknown Title"
-            poster_path = item.get("poster_path")
-            img_url = f"{TMDB_IMAGE_BASE}{poster_path}" if poster_path else "https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500"
-            date = item.get("release_date") or item.get("first_air_date") or "2024"
-            year = date[:4]
-            rating = str(round(item.get("vote_average", 7.5), 1))
-            
-            badge_label = sub.upper() if sub not in ["all", "dubbed_hub"] else ("TAMIL DUB" if sub == "dubbed_hub" else category.upper())
-            badge_bg = "bg-red-600" if "DUB" in badge_label else "bg-zinc-800"
-            
-            stream_url = DEMO_STREAMS[idx % len(DEMO_STREAMS)]
-            
-            items.append({
-                "id": item.get("id", idx + 1),
-                "title": title,
-                "category": category,
-                "subCategory": sub,
-                "dubLanguage": "tamil" if sub == "dubbed_hub" else "none",
-                "badge": badge_label,
-                "badgeBg": badge_bg,
-                "year": year,
-                "rating": rating,
-                "runtime": "Season 1" if media_type == "tv" else "2h 10m",
-                "subs": "English, Tamil",
-                "subInfo": f"{category.capitalize()} • Trending",
-                "img": img_url,
-                "streamUrl": stream_url,
-                "audios": [
-                    {"lang": "Tamil Dubbed" if sub == "dubbed_hub" else "Tamil Master", "codec": "Dolby 5.1", "type": "51"},
-                    {"lang": "Original Track", "codec": "Dolby Atmos", "type": "atmos"}
-                ],
-                "qualities": [
-                    {"res": "720p HD", "size": "850 MB" if media_type == "movie" else "380 MB/ep"},
-                    {"res": "1080p FHD", "size": "2.2 GB" if media_type == "movie" else "850 MB/ep"},
-                    {"res": "4K UHD", "size": "5.6 GB" if media_type == "movie" else "2.1 GB/ep"}
-                ],
-                "type": media_type,
-                "seasons": 1 if media_type == "tv" else None,
-                "episodes": 8 if media_type == "tv" else None
-            })
-    except Exception as e:
-        print(f"TMDB Fetch Error: {e}")
-        
-    return {"results": items}
 
-@app.get("/api/search")
-def search_tmdb(query: str):
-    """
-    Live TMDB search query endpoint.
-    """
-    if not query:
-        return {"results": []}
+    function renderShimmerSkeletons() {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        grid.innerHTML += `
+          <div class="media-card shimmer h-56 rounded-2xl relative overflow-hidden">
+            <div class="absolute bottom-3 left-3 right-3 space-y-2">
+              <div class="h-3 bg-white/10 rounded w-3/4"></div>
+              <div class="h-2 bg-white/10 rounded w-1/2"></div>
+            </div>
+          </div>`;
+      }
+    }
 
-    url = f"{TMDB_BASE_URL}/search/multi"
-    params = {"api_key": TMDB_API_KEY, "query": query}
-    try:
-        res = requests.get(url, params=params, timeout=8).json()
-        items = []
-        for item in res.get("results", [])[:6]:
-            title = item.get("title") or item.get("name")
-            poster = item.get("poster_path")
-            year = (item.get("release_date") or item.get("first_air_date") or "N/A")[:4]
-            if title and poster:
-                items.append({
-                    "id": item.get("id"),
-                    "title": title,
-                    "year": year,
-                    "img": f"{TMDB_IMAGE_BASE}{poster}",
-                    "rating": round(item.get("vote_average", 0), 1)
-                })
-        return {"results": items}
-    except Exception:
-        return {"results": []}
+    async function fetchVaultData() {
+      renderShimmerSkeletons();
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/media?category=${currentTab}&sub=${currentSub}`);
+        if (!response.ok) throw new Error("API error");
+        const data = await response.json();
+        vaultData = data.results || [];
+        document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5';
+        document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>LIVE CLOUD';
+      } catch (err) {
+        console.warn("Backend sleeping or offline, using cache fallback", err);
+        document.getElementById('apiStatusBadge').className = 'text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5';
+        document.getElementById('apiStatusBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>CACHED';
+      }
+      renderMediaGrid();
+    }
+
+    function renderSubPills() {
+      const subContainer = document.getElementById('subFilterContainer');
+      subContainer.innerHTML = '';
+      subFilters[currentTab].forEach((item) => {
+        const isActive = (item.key === currentSub);
+        subContainer.innerHTML += `
+          <button class="sub-pill ${isActive ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this, '${item.key}')">
+            ${item.label}
+          </button>`;
+      });
+    }
+
+    function renderMediaGrid() {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+
+      const filtered = vaultData.filter(item => {
+        if (currentTab !== 'movies' && item.category !== currentTab) return false;
+        
+        if (currentSub === 'dubbed_hub') {
+          if (item.subCategory !== 'dubbed_hub') return false;
+          if (currentNestedDub !== 'all' && item.dubLanguage !== currentNestedDub) return false;
+        } else if (currentSub !== 'all' && item.subCategory !== currentSub) {
+          return false;
+        }
+
+        if (currentSearch) {
+          const q = currentSearch.toLowerCase();
+          return item.title.toLowerCase().includes(q) || item.subInfo.toLowerCase().includes(q);
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
+            <i class="fa-solid fa-magnifying-glass text-2xl mb-2 opacity-30"></i><br>
+            <span>No master titles found for "${currentSearch}".</span><br>
+            <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold">Clear Search & Reset Hub</button>
+          </div>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        grid.innerHTML += `
+          <div class="media-card cursor-pointer gpu" onclick="openMediaModal(${item.id})">
+            <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('${item.img}');">
+              <span class="absolute top-2.5 left-2.5 ${item.badgeBg} text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">${item.badge}</span>
+              <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                <h4 class="text-xs font-bold leading-tight truncate">${item.title}</h4>
+                <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
+                  <span>${item.year}</span><span class="text-amber-400 font-semibold">★ ${item.rating}</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    function handleSearch(val) {
+      currentSearch = val.trim();
+      const clearBtn = document.getElementById('searchClearBtn');
+      const suggestions = document.getElementById('searchSuggestions');
+
+      if (currentSearch.length > 0) {
+        clearBtn.classList.remove('hidden');
+        renderSearchSuggestions(currentSearch);
+      } else {
+        clearBtn.classList.add('hidden');
+        suggestions.classList.add('hidden');
+      }
+      renderMediaGrid();
+    }
+
+    function renderSearchSuggestions(query) {
+      const suggestions = document.getElementById('searchSuggestions');
+      const q = query.toLowerCase();
+      const matches = vaultData.filter(i => i.title.toLowerCase().includes(q) || i.subInfo.toLowerCase().includes(q));
+
+      if (matches.length === 0) {
+        suggestions.classList.add('hidden');
+        return;
+      }
+
+      suggestions.innerHTML = '';
+      matches.slice(0, 4).forEach(item => {
+        suggestions.innerHTML += `
+          <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer" onclick="selectSuggestion(${item.id})">
+            <img src="${item.img}" class="w-8 h-10 object-cover rounded-lg">
+            <div class="overflow-hidden">
+              <h5 class="text-xs font-bold truncate text-white">${item.title}</h5>
+              <span class="text-[10px] text-white/50">${item.year} • ${item.badge}</span>
+            </div>
+          </div>`;
+      });
+      suggestions.classList.remove('hidden');
+    }
+
+    function selectSuggestion(id) {
+      document.getElementById('searchSuggestions').classList.add('hidden');
+      openMediaModal(id);
+    }
+
+    function clearSearch() {
+      haptic();
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchClearBtn').classList.add('hidden');
+      document.getElementById('searchSuggestions').classList.add('hidden');
+      currentSearch = '';
+      renderMediaGrid();
+    }
+
+    function switchMainTab(btn, tabKey) {
+      haptic();
+      closeSheet();
+      document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentTab = tabKey;
+      currentSub = 'all';
+      currentNestedDub = 'all';
+      document.getElementById('nestedDubContainer').style.display = 'none';
+      renderSubPills();
+      fetchVaultData();
+    }
+
+    function switchSubPill(btn, filterKey) {
+      haptic();
+      currentSub = filterKey;
+      currentNestedDub = 'all';
+      Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+
+      const nestedContainer = document.getElementById('nestedDubContainer');
+      if (filterKey === 'dubbed_hub') {
+        nestedContainer.style.display = 'flex';
+        Array.from(nestedContainer.children).forEach((c, idx) => {
+          c.className = idx === 0 
+            ? 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap'
+            : 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+        });
+      } else {
+        nestedContainer.style.display = 'none';
+      }
+      renderMediaGrid();
+    }
+
+    function selectNestedDub(btn, dubLang) {
+      haptic();
+      currentNestedDub = dubLang;
+      Array.from(btn.parentElement.children).forEach(el => {
+        el.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+      });
+      btn.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap';
+      renderMediaGrid();
+    }
+
+    function openMediaModal(itemId) {
+      haptic();
+      const item = vaultData.find(i => i.id === itemId);
+      if (!item) return;
+
+      currentStreamUrl = item.streamUrl;
+      selectedEpisodes = [1];
+      totalEpisodesCount = item.episodes || 1;
+      currentQualities = item.qualities || [];
+      selectedQualityIndex = 0;
+      currentAudioList = item.audios || [];
+      selectedAudioIndex = 0;
+
+      document.getElementById('modalTitle').innerText = item.title;
+      document.getElementById('modalMeta').innerText = `${item.year} • ★ ${item.rating} • ${item.subInfo}`;
+      document.getElementById('modalRuntime').innerText = item.runtime;
+      document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${item.subs}`;
+
+      const seriesSection = document.getElementById('seriesSection');
+      if (item.type === 'series') {
+        seriesSection.classList.remove('hidden');
+        renderSeasonsAndEpisodes(item.seasons || 1, item.episodes || 1);
+      } else {
+        seriesSection.classList.add('hidden');
+      }
+
+      renderAudioTracks();
+      renderQualityPills();
+      updateActionButtons();
+
+      const backdrop = document.getElementById('modalBackdrop');
+      const modal = document.getElementById('mediaModal');
+      backdrop.classList.remove('hidden');
+      setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+      modal.classList.remove('sheet-down');
+      modal.classList.add('sheet-up');
+    }
+
+    function renderAudioTracks() {
+      const audioBox = document.getElementById('audioTracks');
+      audioBox.innerHTML = '';
+      currentAudioList.forEach((aud, i) => {
+        const isSelected = (i === selectedAudioIndex);
+        let badgeClass = 'codec-stereo';
+        if (aud.type === 'atmos') badgeClass = 'codec-atmos';
+        if (aud.type === '51') badgeClass = 'codec-51';
+
+        audioBox.innerHTML += `
+          <button class="${isSelected ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectAudio(${i})">
+            <span>${aud.lang}</span>
+            <span class="codec-badge ${badgeClass}">${aud.codec}</span>
+          </button>`;
+      });
+    }
+
+    function selectAudio(index) {
+      haptic();
+      selectedAudioIndex = index;
+      renderAudioTracks();
+      updateActionButtons();
+    }
+
+    function renderQualityPills() {
+      const qualityBox = document.getElementById('qualityPills');
+      qualityBox.innerHTML = '';
+      currentQualities.forEach((q, i) => {
+        const isSelected = (i === selectedQualityIndex);
+        qualityBox.innerHTML += `
+          <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectQuality(${i})">
+            <span>${q.res}</span>
+            <span class="text-[10px] ${isSelected ? 'text-zinc-600' : 'text-white/40'} font-mono">(${q.size})</span>
+          </button>`;
+      });
+    }
+
+    function selectQuality(index) {
+      haptic();
+      selectedQualityIndex = index;
+      renderQualityPills();
+      updateActionButtons();
+    }
+
+    function renderSeasonsAndEpisodes(seasons, episodes) {
+      const sBox = document.getElementById('seasonPills');
+      sBox.innerHTML = '';
+      for (let s = 1; s <= seasons; s++) {
+        sBox.innerHTML += `<button class="${s === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1 rounded-lg text-xs" onclick="selectSeason(this)">Season ${s}</button>`;
+      }
+
+      const eBox = document.getElementById('episodeGrid');
+      eBox.innerHTML = '';
+      for (let e = 1; e <= episodes; e++) {
+        const isSelected = selectedEpisodes.includes(e);
+        eBox.innerHTML += `<button id="ep-btn-${e}" class="ep-pill ${isSelected ? 'selected' : ''} whitespace-nowrap" onclick="toggleEpisode(${e})">EP ${e}</button>`;
+      }
+    }
+
+    function selectSeason(btn) {
+      haptic();
+      Array.from(btn.parentElement.children).forEach(c => {
+        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-lg text-xs';
+      });
+      btn.className = 'bg-white text-black font-bold px-3 py-1 rounded-lg text-xs';
+    }
+
+    function toggleEpisode(epNumber) {
+      haptic();
+      const index = selectedEpisodes.indexOf(epNumber);
+      if (index > -1) {
+        if (selectedEpisodes.length > 1) selectedEpisodes.splice(index, 1);
+      } else {
+        selectedEpisodes.push(epNumber);
+      }
+      selectedEpisodes.sort((a, b) => a - b);
+      
+      for (let e = 1; e <= totalEpisodesCount; e++) {
+        const btn = document.getElementById(`ep-btn-${e}`);
+        if (btn) {
+          if (selectedEpisodes.includes(e)) btn.classList.add('selected');
+          else btn.classList.remove('selected');
+        }
+      }
+      updateActionButtons();
+    }
+
+    function toggleSelectAll() {
+      haptic();
+      if (selectedEpisodes.length === totalEpisodesCount) {
+        selectedEpisodes = [1];
+      } else {
+        selectedEpisodes = Array.from({ length: totalEpisodesCount }, (_, i) => i + 1);
+      }
+      for (let e = 1; e <= totalEpisodesCount; e++) {
+        const btn = document.getElementById(`ep-btn-${e}`);
+        if (btn) {
+          if (selectedEpisodes.includes(e)) btn.classList.add('selected');
+          else btn.classList.remove('selected');
+        }
+      }
+      updateActionButtons();
+    }
+
+    function updateActionButtons() {
+      const count = selectedEpisodes.length;
+      const curQ = currentQualities[selectedQualityIndex];
+      const sizeLabel = curQ ? curQ.size : '';
+
+      if (totalEpisodesCount > 1) {
+        if (count === 1) {
+          document.getElementById('streamBtnText').innerText = `Stream EP ${selectedEpisodes[0]}`;
+          document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+          document.getElementById('calculatedSizeText').innerText = `Est: ${sizeLabel}`;
+        } else {
+          document.getElementById('streamBtnText').innerText = `Play Queue (${count})`;
+          document.getElementById('downloadBtnText').innerText = `Batch (${count} EPs)`;
+          document.getElementById('calculatedSizeText').innerText = `Total: ~${count} items`;
+        }
+      } else {
+        document.getElementById('streamBtnText').innerText = "Stream in MX";
+        document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+        document.getElementById('calculatedSizeText').innerText = `File Size: ${sizeLabel}`;
+      }
+    }
+
+    function closeSheet() {
+      haptic();
+      const backdrop = document.getElementById('modalBackdrop');
+      const modal = document.getElementById('mediaModal');
+      backdrop.classList.add('opacity-0');
+      modal.classList.remove('sheet-up');
+      modal.classList.add('sheet-down');
+      setTimeout(() => backdrop.classList.add('hidden'), 220);
+    }
+
+    function launchMX() {
+      haptic();
+      if (!currentStreamUrl) return;
+      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
+    }
+
+    function launch1DM() {
+      haptic();
+      if (!currentStreamUrl) return;
+      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=idm.internet.download.manager;end`;
+    }
+
+    function copyStreamUrl() {
+      haptic();
+      if (!currentStreamUrl) return;
+      navigator.clipboard.writeText(currentStreamUrl).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2000);
+      });
+    }
+
+    // Initial Execution
+    renderSubPills();
+    fetchVaultData();
+  </script>
+</body>
+    </html>
