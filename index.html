@@ -13,7 +13,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Hardware acceleration & smooth performance rules */
     .gpu { transform: translate3d(0, 0, 0); will-change: transform, opacity; backface-visibility: hidden; }
     .glass-nav { background: rgba(5, 5, 8, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
     
@@ -30,13 +29,18 @@
     .ep-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.7); font-size: 11px; padding: 7px 12px; border-radius: 10px; font-weight: 600; }
     .ep-pill.selected { background: #E50914; border-color: #E50914; color: #FFF; font-weight: 800; box-shadow: 0 2px 10px rgba(229, 9, 20, 0.4); }
 
+    .codec-badge { font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: 700; font-family: monospace; }
+    .codec-atmos { background: rgba(147, 51, 234, 0.2); border: 1px solid rgba(147, 51, 234, 0.4); color: #C084FC; }
+    .codec-51 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; }
+    .codec-stereo { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #E4E4E7; }
+
     .sheet-up { transform: translate3d(0, 0%, 0); transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
     .sheet-down { transform: translate3d(0, 100%, 0); transition: transform 0.22s ease-in; }
   </style>
 </head>
 <body class="pb-28 select-none">
 
-  <!-- Top Fixed Bar -->
+  <!-- Header -->
   <header class="p-4 flex items-center justify-between sticky top-0 z-40 glass-nav gpu">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-red-800 flex items-center justify-center shadow-lg shadow-red-900/40">
@@ -57,7 +61,7 @@
     </div>
   </header>
 
-  <!-- Search Bar -->
+  <!-- Search -->
   <div class="px-4 pt-3 pb-1">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
@@ -66,7 +70,7 @@
     </div>
   </div>
 
-  <!-- 4 Master Division Tabs (No Cheap 80s/90s Chips) -->
+  <!-- Master Categories -->
   <div class="px-4 border-b border-white/5 flex gap-7 overflow-x-auto no-scrollbar pt-2">
     <button class="top-tab active whitespace-nowrap" onclick="switchMainTab(this, 'movies')">Movies</button>
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'series')">Web Series</button>
@@ -74,24 +78,35 @@
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
   </div>
 
-  <!-- Dynamic Regional & Dub Sub-Pills -->
+  <!-- Dynamic Sub Pills -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar">
-    <button class="sub-pill active whitespace-nowrap" onclick="switchSubPill(this)">All Movies</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Tamil</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Malayalam</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Telugu</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Kannada</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Hindi</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Hollywood</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this)">Dubbed Hub</button>
+    <button class="sub-pill active whitespace-nowrap" onclick="switchSubPill(this, 'all')">All Movies</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'tamil')">Tamil</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'malayalam')">Malayalam</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'telugu')">Telugu</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'kannada')">Kannada</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'hindi')">Hindi</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'hollywood')">Hollywood</button>
+    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'dubbed_hub')">🎙️ Dubbed Hub</button>
   </div>
 
-  <!-- High-Performance Poster Grid (60 FPS Native Touch) -->
+  <!-- Nested Dubbed Hub Sub-languages -->
+  <div id="nestedDubContainer" class="px-4 pb-2 hidden flex gap-2 overflow-x-auto no-scrollbar">
+    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this)">All Dubs</button>
+    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Tamil Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Telugu Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Hindi Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Malayalam Dubbed</button>
+  </div>
+
+  <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1">
 
-    <!-- Demo Movie Card -->
     <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Deadpool & Wolverine', 'movie', '2024', 'Hollywood • Action', '8.1', '2h 08m', 'English, Tamil', ['Tamil (Org Audio)', 'English Dolby 5.1'], ['720p HD', '1080p FHD', '4K UHD'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">
+      onclick="openSheet('Deadpool & Wolverine', 'movie', '2024', 'Hollywood • Action', '8.1', '2h 08m', 'English, Tamil', 
+        [{lang:'Tamil', codec:'Dolby 5.1', type:'51'}, {lang:'English', codec:'Dolby Atmos', type:'atmos'}], 
+        [{res:'720p HD', size:'850 MB'}, {res:'1080p FHD', size:'2.1 GB'}, {res:'4K UHD', size:'6.8 GB'}], 
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">
       <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500');">
         <span class="absolute top-2.5 left-2.5 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">TAMIL DUB</span>
         <div class="absolute bottom-2.5 left-2.5 right-2.5">
@@ -103,9 +118,11 @@
       </div>
     </div>
 
-    <!-- Demo Tamil Card -->
     <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Baashha', 'movie', '1995', 'Tamil Classic Remaster', '8.6', '2h 25m', 'English', ['Tamil Master 5.1'], ['1080p Remaster'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">
+      onclick="openSheet('Baashha', 'movie', '1995', 'Tamil Classic Remaster', '8.6', '2h 25m', 'English', 
+        [{lang:'Tamil Master', codec:'DTS 5.1', type:'51'}, {lang:'Original Track', codec:'Stereo 2.0', type:'stereo'}], 
+        [{res:'720p HD', size:'950 MB'}, {res:'1080p Remaster', size:'2.4 GB'}], 
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">
       <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500');">
         <span class="absolute top-2.5 left-2.5 bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">TAMIL</span>
         <div class="absolute bottom-2.5 left-2.5 right-2.5">
@@ -117,9 +134,11 @@
       </div>
     </div>
 
-    <!-- Demo K-Drama / Series with Episodes -->
     <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Squid Game', 'series', '2024', 'K-Drama • Thriller', '8.0', 'Season 2', 'English, Tamil', ['Tamil Dubbed', 'Korean (Original)'], ['720p HD', '1080p FHD'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 2, 8)">
+      onclick="openSheet('Squid Game S2', 'series', '2024', 'K-Drama • Thriller', '8.0', 'Season 2', 'English, Tamil', 
+        [{lang:'Tamil Dubbed', codec:'Stereo 2.0', type:'stereo'}, {lang:'Korean Org', codec:'Dolby 5.1', type:'51'}], 
+        [{res:'720p HD', size:'420 MB/ep'}, {res:'1080p FHD', size:'1.1 GB/ep'}], 
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 2, 8)">
       <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500');">
         <span class="absolute top-2.5 left-2.5 bg-purple-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">K-DRAMA</span>
         <div class="absolute bottom-2.5 left-2.5 right-2.5">
@@ -131,9 +150,11 @@
       </div>
     </div>
 
-    <!-- Demo Anime Card -->
     <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Demon Slayer', 'series', '2024', 'Anime • Hashira Arc', '8.8', 'Season 4', 'English, Tamil', ['Tamil Dubbed', 'Japanese Org (Sub)'], ['720p HD', '1080p FHD'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 4, 8)">
+      onclick="openSheet('Demon Slayer', 'series', '2024', 'Anime • Hashira Arc', '8.8', 'Season 4', 'English, Tamil', 
+        [{lang:'Tamil Dubbed', codec:'Stereo 2.0', type:'stereo'}, {lang:'Japanese Master', codec:'FLAC Lossless', type:'atmos'}], 
+        [{res:'720p HD', size:'260 MB/ep'}, {res:'1080p FHD', size:'650 MB/ep'}], 
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 4, 8)">
       <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500');">
         <span class="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">ANIME</span>
         <div class="absolute bottom-2.5 left-2.5 right-2.5">
@@ -147,7 +168,7 @@
 
   </div>
 
-  <!-- Liquid Bottom Action Modal -->
+  <!-- Bottom Sheet -->
   <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeSheet()"></div>
   
   <div id="mediaModal" class="fixed inset-x-0 bottom-0 z-50 bg-[#0A0A0F] border-t border-white/10 rounded-t-[32px] p-5 pb-8 sheet-down shadow-2xl max-h-[88vh] overflow-y-auto no-scrollbar gpu">
@@ -168,29 +189,32 @@
       </button>
     </div>
 
-    <!-- Episodes Multi-Select Section (Series/Anime/KDrama) -->
+    <!-- Episodes Multi-Select Section -->
     <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
       <div class="flex items-center justify-between mb-2">
-        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Episodes (Tap to Select / Multi-Pick)</label>
-        <button id="selectAllBtn" onclick="toggleSelectAll()" class="text-[10px] font-bold text-red-400 bg-red-600/10 px-2 py-0.5 rounded border border-red-500/20">Select All</button>
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes (Tap to Pick)</label>
+        <button id="selectAllBtn" onclick="toggleSelectAll()" class="text-[10px] font-bold text-red-400 bg-red-600/10 px-2.5 py-1 rounded border border-red-500/20">Select All</button>
       </div>
       <div id="seasonPills" class="flex gap-2 overflow-x-auto no-scrollbar mb-2"></div>
       <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </div>
 
-    <!-- Audio Selection -->
+    <!-- Audio Selection with Codec Profiles -->
     <div class="mt-4">
-      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream Match</label>
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
     <!-- Quality Selection -->
     <div class="mt-4">
-      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Bitrate / Quality</label>
+      <div class="flex items-center justify-between">
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
+        <span id="calculatedSizeText" class="text-[10px] font-mono text-emerald-400 font-bold"></span>
+      </div>
       <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Action Buttons (MX Player Pro, 1DM Batch, Direct Copy Link) -->
+    <!-- Actions -->
     <div class="mt-6 space-y-2.5">
       <div class="grid grid-cols-2 gap-3">
         <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
@@ -201,7 +225,6 @@
         </button>
       </div>
       
-      <!-- Copy Link Button (Chrome / IDM / PC / VLC) -->
       <button onclick="copyStreamUrl()" class="w-full bg-white/5 border border-white/10 text-white/80 font-mono py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition">
         <i class="fa-regular fa-copy text-white/50"></i> Copy Direct Stream Link
       </button>
@@ -220,11 +243,15 @@
     let currentStreamUrl = "";
     let selectedEpisodes = [];
     let totalEpisodesCount = 0;
+    let currentQualities = [];
+    let selectedQualityIndex = 0;
+    let currentAudioList = [];
+    let selectedAudioIndex = 0;
 
     const subFilters = {
-      movies: ['All Movies', 'Tamil', 'Malayalam', 'Telugu', 'Kannada', 'Hindi', 'Hollywood', 'Dubbed Hub'],
-      series: ['All Series', 'Tamil Web Series', 'Hindi Shows', 'English Shows', 'South Dubbed'],
-      kdrama: ['All K-Drama', 'Tamil Dubbed K-Drama', 'Original Korean (Eng Sub)', 'Trending Romance'],
+      movies: ['All Movies', 'Tamil', 'Malayalam', 'Telugu', 'Kannada', 'Hindi', 'Hollywood', '🎙️ Dubbed Hub'],
+      series: ['All Series', 'Tamil Web Series', 'Hindi Shows', 'English Shows', '🎙️ Dubbed Hub'],
+      kdrama: ['All K-Drama', 'Tamil Dubbed K-Drama', 'Original Korean (Eng Sub)'],
       anime: ['All Anime', 'Tamil Dubbed Anime', 'English Dubbed', 'Japanese (Subbed)']
     };
 
@@ -234,20 +261,38 @@
 
     function switchMainTab(btn, tabKey) {
       haptic();
+      closeSheet();
       document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
+
+      document.getElementById('nestedDubContainer').classList.add('hidden');
 
       const subContainer = document.getElementById('subFilterContainer');
       subContainer.innerHTML = '';
       subFilters[tabKey].forEach((filterName, index) => {
-        subContainer.innerHTML += `<button class="sub-pill ${index === 0 ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this)">${filterName}</button>`;
+        subContainer.innerHTML += `<button class="sub-pill ${index === 0 ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this, '${filterName}')">${filterName}</button>`;
       });
     }
 
-    function switchSubPill(btn) {
+    function switchSubPill(btn, filterKey) {
       haptic();
       Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
+
+      const nestedContainer = document.getElementById('nestedDubContainer');
+      if (filterKey.includes('Dubbed Hub')) {
+        nestedContainer.classList.remove('hidden');
+      } else {
+        nestedContainer.classList.add('hidden');
+      }
+    }
+
+    function selectNestedDub(btn) {
+      haptic();
+      Array.from(btn.parentElement.children).forEach(el => {
+        el.className = 'text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+      });
+      btn.className = 'text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap';
     }
 
     function openSheet(title, type, year, sub, rating, runtime, subs, audios, qualities, streamUrl, seasons = 1, episodes = 1) {
@@ -255,6 +300,10 @@
       currentStreamUrl = streamUrl;
       selectedEpisodes = [1];
       totalEpisodesCount = episodes;
+      currentQualities = qualities;
+      selectedQualityIndex = 1 < qualities.length ? 1 : 0;
+      currentAudioList = audios;
+      selectedAudioIndex = 0;
 
       document.getElementById('modalTitle').innerText = title;
       document.getElementById('modalMeta').innerText = `${year} • ★ ${rating} • ${sub}`;
@@ -265,26 +314,13 @@
       if (type === 'series') {
         seriesSection.classList.remove('hidden');
         renderSeasonsAndEpisodes(seasons, episodes);
-        updateActionButtons();
       } else {
         seriesSection.classList.add('hidden');
-        document.getElementById('streamBtnText').innerText = "Stream in MX";
-        document.getElementById('downloadBtnText').innerText = "1DM Download";
       }
 
-      // Audio setup
-      const audioBox = document.getElementById('audioTracks');
-      audioBox.innerHTML = '';
-      audios.forEach((aud, i) => {
-        audioBox.innerHTML += `<button class="${i === 0 ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap" onclick="selectBtn(this)">${aud}</button>`;
-      });
-
-      // Quality setup
-      const qualityBox = document.getElementById('qualityPills');
-      qualityBox.innerHTML = '';
-      qualities.forEach((q, i) => {
-        qualityBox.innerHTML += `<button class="${i === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap" onclick="selectBtn(this)">${q}</button>`;
-      });
+      renderAudioTracks();
+      renderQualityPills();
+      updateActionButtons();
 
       const backdrop = document.getElementById('modalBackdrop');
       const modal = document.getElementById('mediaModal');
@@ -292,6 +328,50 @@
       setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
       modal.classList.remove('sheet-down');
       modal.classList.add('sheet-up');
+    }
+
+    function renderAudioTracks() {
+      const audioBox = document.getElementById('audioTracks');
+      audioBox.innerHTML = '';
+      currentAudioList.forEach((aud, i) => {
+        const isSelected = i === selectedAudioIndex;
+        let badgeClass = 'codec-stereo';
+        if (aud.type === 'atmos') badgeClass = 'codec-atmos';
+        if (aud.type === '51') badgeClass = 'codec-51';
+
+        audioBox.innerHTML += `
+          <button class="${isSelected ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectAudio(${i})">
+            <span>${aud.lang}</span>
+            <span class="codec-badge ${badgeClass}">${aud.codec}</span>
+          </button>`;
+      });
+    }
+
+    function selectAudio(index) {
+      haptic();
+      selectedAudioIndex = index;
+      renderAudioTracks();
+      updateActionButtons();
+    }
+
+    function renderQualityPills() {
+      const qualityBox = document.getElementById('qualityPills');
+      qualityBox.innerHTML = '';
+      currentQualities.forEach((q, i) => {
+        const isSelected = i === selectedQualityIndex;
+        qualityBox.innerHTML += `
+          <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectQuality(${i})">
+            <span>${q.res}</span>
+            <span class="text-[10px] ${isSelected ? 'text-zinc-600' : 'text-white/40'} font-mono">(${q.size})</span>
+          </button>`;
+      });
+    }
+
+    function selectQuality(index) {
+      haptic();
+      selectedQualityIndex = index;
+      renderQualityPills();
+      updateActionButtons();
     }
 
     function renderSeasonsAndEpisodes(seasons, episodes) {
@@ -322,11 +402,8 @@
       for (let e = 1; e <= totalEpisodesCount; e++) {
         const btn = document.getElementById(`ep-btn-${e}`);
         if (btn) {
-          if (selectedEpisodes.includes(e)) {
-            btn.classList.add('selected');
-          } else {
-            btn.classList.remove('selected');
-          }
+          if (selectedEpisodes.includes(e)) btn.classList.add('selected');
+          else btn.classList.remove('selected');
         }
       }
       updateActionButtons();
@@ -342,11 +419,8 @@
       for (let e = 1; e <= totalEpisodesCount; e++) {
         const btn = document.getElementById(`ep-btn-${e}`);
         if (btn) {
-          if (selectedEpisodes.includes(e)) {
-            btn.classList.add('selected');
-          } else {
-            btn.classList.remove('selected');
-          }
+          if (selectedEpisodes.includes(e)) btn.classList.add('selected');
+          else btn.classList.remove('selected');
         }
       }
       updateActionButtons();
@@ -354,12 +428,23 @@
 
     function updateActionButtons() {
       const count = selectedEpisodes.length;
-      if (count === 1) {
-        document.getElementById('streamBtnText').innerText = `Stream EP ${selectedEpisodes[0]}`;
-        document.getElementById('downloadBtnText').innerText = `1DM Download`;
+      const curQ = currentQualities[selectedQualityIndex];
+      const sizeLabel = curQ ? curQ.size : '';
+
+      if (totalEpisodesCount > 1) {
+        if (count === 1) {
+          document.getElementById('streamBtnText').innerText = `Stream EP ${selectedEpisodes[0]}`;
+          document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+          document.getElementById('calculatedSizeText').innerText = `Est: ${sizeLabel}`;
+        } else {
+          document.getElementById('streamBtnText').innerText = `Play Queue (${count})`;
+          document.getElementById('downloadBtnText').innerText = `Batch (${count} EPs)`;
+          document.getElementById('calculatedSizeText').innerText = `Total: ~${count} items`;
+        }
       } else {
-        document.getElementById('streamBtnText').innerText = `Play Queue (${count})`;
-        document.getElementById('downloadBtnText').innerText = `1DM Batch (${count})`;
+        document.getElementById('streamBtnText').innerText = "Stream in MX";
+        document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+        document.getElementById('calculatedSizeText').innerText = `File Size: ${sizeLabel}`;
       }
     }
 
@@ -376,9 +461,9 @@
     function selectBtn(btn) {
       haptic();
       Array.from(btn.parentElement.children).forEach(c => {
-        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1.5 rounded-xl text-xs whitespace-nowrap';
+        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-lg text-xs';
       });
-      btn.className = 'bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs whitespace-nowrap';
+      btn.className = 'bg-white text-black font-bold px-3 py-1 rounded-lg text-xs';
     }
 
     function launchMX() {
@@ -404,4 +489,4 @@
     }
   </script>
 </body>
-      </html>
+  </html>
