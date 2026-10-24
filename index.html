@@ -8,67 +8,265 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #0A0A0C; color: #FFF; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body { background-color: #030305; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Roboto, sans-serif; overflow-x: hidden; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass-nav { background: rgba(5, 5, 8, 0.9); backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.06); }
+    .glass-card:active { transform: scale(0.96); }
+    .glow-red { box-shadow: 0 4px 20px -2px rgba(229, 9, 20, 0.6); }
+    .pill { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.65); }
+    .pill.active { background: #E50914; color: #FFF; border-color: #E50914; font-weight: 700; box-shadow: 0 2px 14px rgba(229, 9, 20, 0.5); }
+    .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%); background-size: 200% 100%; animation: shimmer 1.8s infinite linear; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .sheet-up { transform: translateY(0%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .sheet-down { transform: translateY(100%); transition: transform 0.25s ease-in; }
   </style>
 </head>
-<body class="pb-24 select-none">
-  <!-- Top Bar -->
-  <header class="p-4 flex items-center justify-between sticky top-0 bg-[#0A0A0C]/90 backdrop-blur-md z-30 border-b border-white/10">
-    <div class="flex items-center gap-2">
-      <span class="text-red-600 font-black text-2xl tracking-tighter">NEXUS</span>
-      <span class="text-xs bg-red-600/20 text-red-400 px-2 py-0.5 rounded font-mono">VAULT</span>
+<body class="pb-28 select-none">
+
+  <!-- Top Glass Bar -->
+  <header class="p-4 flex items-center justify-between sticky top-0 z-40 glass-nav">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-700 to-red-500 flex items-center justify-center glow-red">
+        <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5 leading-none">
+          <span class="text-white font-black text-lg tracking-wider">NEXUS</span>
+          <span class="bg-red-600/20 text-red-500 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-red-500/30">VAULT</span>
+        </div>
+        <span class="text-[9px] text-white/40 tracking-widest uppercase mt-0.5 block">Zero-Lag Private Core</span>
+      </div>
     </div>
-    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-      <i class="fa-solid fa-shield text-xs text-red-500"></i>
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>ONLINE
+      </span>
     </div>
   </header>
 
-  <!-- Search Bar -->
-  <div class="px-4 py-3">
+  <!-- Search -->
+  <div class="px-4 pt-3 pb-1">
     <div class="relative">
-      <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-white/40 text-sm"></i>
-      <input type="text" placeholder="Search Movies, Anime, Series, Tamil Dubs..." class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-red-500 transition">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-sm"></i>
+      <input type="text" placeholder="Search Master Titles, Dubs, Anime, 80s/90s Classics..." 
+        class="w-full bg-[#0E0E13] border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-xs placeholder:text-white/30 focus:outline-none focus:border-red-500/70 focus:ring-1 focus:ring-red-500/50 transition">
     </div>
   </div>
 
-  <!-- Hero Banner -->
-  <div class="px-4 py-2">
-    <div class="relative h-48 rounded-2xl overflow-hidden border border-white/10 flex items-end p-4 bg-gradient-to-t from-black via-black/40 to-transparent bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800');">
+  <!-- Primary Categories -->
+  <div class="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar text-xs">
+    <button class="pill active px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🔥 Vault Picks</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🎙️ Dubbed Hub</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🌴 Tamil</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🦁 Telugu</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🌊 Malayalam</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🎬 Hollywood</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">🌸 K-Drama</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">📺 Web Series</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">⚔️ Anime</button>
+    <button class="pill px-3.5 py-2 rounded-xl whitespace-nowrap" onclick="switchCategory(this)">📻 80s & 90s Vault</button>
+  </div>
+
+  <!-- Era Filter -->
+  <div class="px-4 py-1 flex gap-2 overflow-x-auto no-scrollbar text-[11px]">
+    <span class="text-white/30 py-1 font-mono text-[10px] self-center uppercase">Era:</span>
+    <button class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">2020s</button>
+    <button class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">2010s</button>
+    <button class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">2000s</button>
+    <button class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">90s Gold</button>
+    <button class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap">80s Vintage</button>
+  </div>
+
+  <!-- Dynamic Content Feed -->
+  <div class="space-y-6 mt-4">
+    <section class="px-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-fire text-red-500"></i> Trending & Tamil Dubbed
+        </h3>
+        <span class="text-[11px] text-white/40 font-mono">Verified Stream</span>
+      </div>
+      <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+        <!-- Card 1 -->
+        <div class="min-w-[130px] max-w-[130px] rounded-2xl overflow-hidden glass-card cursor-pointer" 
+          onclick="openModal('Deadpool & Wolverine', 'movie', '2024', 'Tamil Dubbed + English', '8.1', '2h 08m', 'English, Tamil', ['Tamil (Org Audio)', 'English Dolby 5.1'], ['720p HD', '1080p FHD', '4K UHD'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">
+          <div class="h-44 bg-zinc-800 relative flex items-end p-2.5 bg-cover bg-center" style="background-image: linear-gradient(0deg, #030305 0%, transparent 60%), url('https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=400');">
+            <span class="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded">TAMIL DUB</span>
+            <span class="text-xs font-bold leading-tight">Deadpool & Wolverine</span>
+          </div>
+          <div class="p-2 text-[10px] text-white/50 flex justify-between">
+            <span>2024</span><span class="text-amber-400 font-semibold">★ 8.1</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="min-w-[130px] max-w-[130px] rounded-2xl overflow-hidden glass-card cursor-pointer" 
+          onclick="openModal('Baashha', 'movie', '1995', 'Tamil Classic Remaster', '8.6', '2h 25m', 'English', ['Tamil Master 5.1'], ['1080p Remaster'], 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">
+          <div class="h-44 bg-zinc-800 relative flex items-end p-2.5 bg-cover bg-center" style="background-image: linear-gradient(0deg, #030305 0%, transparent 60%), url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400');">
+            <span class="absolute top-2 left-2 bg-amber-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded">1995 REMASTER</span>
+            <span class="text-xs font-bold leading-tight">Baashha</span>
+          </div>
+          <div class="p-2 text-[10px] text-white/50 flex justify-between">
+            <span>Rajinikanth</span><span class="text-amber-400 font-semibold">★ 8.6</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal Sheet -->
+  <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeModal()"></div>
+  
+  <div id="mediaModal" class="fixed inset-x-0 bottom-0 z-50 bg-[#0B0B10] border-t border-white/10 rounded-t-[32px] p-5 pb-8 sheet-down shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+    <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4 cursor-pointer" onclick="closeModal()"></div>
+    
+    <div class="flex items-start justify-between">
       <div>
-        <span class="bg-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Featured</span>
-        <h2 class="text-lg font-bold mt-1">Universal Media Engine</h2>
-        <p class="text-xs text-white/60">Stream in MX Player & Download with 1DM</p>
+        <h2 id="modalTitle" class="text-lg font-black text-white">Title</h2>
+        <div class="flex items-center gap-2 mt-1">
+          <span id="modalMeta" class="text-xs text-white/50 font-medium">Meta</span>
+          <span class="w-1 h-1 rounded-full bg-white/20"></span>
+          <span id="modalRuntime" class="text-xs text-white/50 font-mono">Runtime</span>
+        </div>
+        <p id="modalSubs" class="text-[10px] text-emerald-400 font-mono mt-1"><i class="fa-solid fa-closed-captioning mr-1"></i>Subs: English</p>
       </div>
+      <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Server Toggle -->
+    <div class="mt-4">
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Server Router</label>
+      <div class="flex gap-2 mt-1.5">
+        <button class="px-3 py-1.5 rounded-xl text-xs bg-red-600 text-white font-bold" onclick="selectBtn(this)">Server 1 (High-Speed CDN)</button>
+        <button class="px-3 py-1.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white/60" onclick="selectBtn(this)">Server 2 (Regional Mirror)</button>
+      </div>
+    </div>
+
+    <!-- Audio Selector -->
+    <div class="mt-4">
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream</label>
+      <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
+    </div>
+
+    <!-- Quality Selector -->
+    <div class="mt-4">
+      <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Bitrate / Resolution</label>
+      <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
+    </div>
+
+    <!-- Actions (MX Player Pro compatible, 1DM, Copy Link) -->
+    <div class="mt-6 space-y-2.5">
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
+          <i class="fa-solid fa-play text-red-600"></i> Stream in MX
+        </button>
+        <button onclick="launch1DM()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
+          <i class="fa-solid fa-download"></i> 1DM Direct
+        </button>
+      </div>
+      
+      <!-- Direct Copy Link -->
+      <button onclick="copyStreamUrl()" class="w-full bg-white/5 border border-white/10 text-white/80 font-mono py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition">
+        <i class="fa-regular fa-copy text-white/50"></i> Copy Raw Stream Link (for Chrome / VLC / IDM)
+      </button>
     </div>
   </div>
 
-  <!-- Content Sections -->
-  <div class="px-4 mt-6">
-    <h3 class="text-sm font-bold text-white/80 mb-3 flex items-center gap-2">
-      <i class="fa-solid fa-fire text-red-500"></i> Tamil Dubbed & Popular
-    </h3>
-    <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-      <div class="min-w-[120px] rounded-xl overflow-hidden bg-white/5 border border-white/10">
-        <div class="h-40 bg-zinc-800 flex items-center justify-center text-xs text-white/40">Poster 1</div>
-        <div class="p-2 text-xs font-semibold truncate">Movie Title</div>
-      </div>
-      <div class="min-w-[120px] rounded-xl overflow-hidden bg-white/5 border border-white/10">
-        <div class="h-40 bg-zinc-800 flex items-center justify-center text-xs text-white/40">Poster 2</div>
-        <div class="p-2 text-xs font-semibold truncate">Anime Title</div>
-      </div>
-      <div class="min-w-[120px] rounded-xl overflow-hidden bg-white/5 border border-white/10">
-        <div class="h-40 bg-zinc-800 flex items-center justify-center text-xs text-white/40">Poster 3</div>
-        <div class="p-2 text-xs font-semibold truncate">Web Series</div>
-      </div>
-    </div>
+  <!-- Toast -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-2xl z-50 hidden transition-all">
+    Direct Stream Link Copied!
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) { tg.expand(); tg.ready(); }
+
+    let currentStreamUrl = "";
+
+    function haptic() {
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function switchCategory(btn) {
+      haptic();
+      document.querySelectorAll('.pill').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function openModal(title, type, year, sub, rating, runtime, subs, audios, qualities, streamUrl) {
+      haptic();
+      currentStreamUrl = streamUrl;
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalMeta').innerText = `${year} • ★ ${rating} • ${sub}`;
+      document.getElementById('modalRuntime').innerText = runtime;
+      document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${subs}`;
+
+      const audioBox = document.getElementById('audioTracks');
+      audioBox.innerHTML = '';
+      audios.forEach((aud, i) => {
+        audioBox.innerHTML += `<button class="${i === 0 ? 'bg-red-600 text-white font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap" onclick="selectBtn(this)">${aud}</button>`;
+      });
+
+      const qualityBox = document.getElementById('qualityPills');
+      qualityBox.innerHTML = '';
+      qualities.forEach((q, i) => {
+        qualityBox.innerHTML += `<button class="${i === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap" onclick="selectBtn(this)">${q}</button>`;
+      });
+
+      const backdrop = document.getElementById('modalBackdrop');
+      const modal = document.getElementById('mediaModal');
+      backdrop.classList.remove('hidden');
+      setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+      modal.classList.remove('sheet-down');
+      modal.classList.add('sheet-up');
+    }
+
+    function closeModal() {
+      haptic();
+      const backdrop = document.getElementById('modalBackdrop');
+      const modal = document.getElementById('mediaModal');
+      backdrop.classList.add('opacity-0');
+      modal.classList.remove('sheet-up');
+      modal.classList.add('sheet-down');
+      setTimeout(() => backdrop.classList.add('hidden'), 250);
+    }
+
+    function selectBtn(btn) {
+      haptic();
+      Array.from(btn.parentElement.children).forEach(c => {
+        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1.5 rounded-xl text-xs whitespace-nowrap';
+      });
+      btn.className = 'bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs whitespace-nowrap';
+    }
+
+    function launchMX() {
+      haptic();
+      if (!currentStreamUrl) return;
+      // Universal Android Video Player Intent (Works for MX Player Free & Pro)
+      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
+    }
+
+    function launch1DM() {
+      haptic();
+      if (!currentStreamUrl) return;
+      // Direct intent for 1DM Downloader
+      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=idm.internet.download.manager;end`;
+    }
+
+    function copyStreamUrl() {
+      haptic();
+      if (!currentStreamUrl) return;
+      navigator.clipboard.writeText(currentStreamUrl).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2000);
+      });
+    }
   </script>
 </body>
-        </html>
+      </html>
