@@ -65,7 +65,7 @@
   <div class="px-4 pt-3 pb-1">
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/30 text-xs"></i>
-      <input type="text" placeholder="Search Master Titles, Dubs, Cast..." 
+      <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search Master Titles, Dubs, Cast..." 
         class="w-full bg-[#0E0E14] border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-xs placeholder:text-white/30 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition">
     </div>
   </div>
@@ -81,16 +81,16 @@
   <!-- Sub Pills -->
   <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
 
-  <!-- Nested Dubbed Hub Sub-languages (Clean Flex Toggle) -->
-  <div id="nestedDubContainer" class="px-4 pb-2 hidden flex gap-2 overflow-x-auto no-scrollbar">
-    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this)">All Dubs</button>
-    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Tamil Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Telugu Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Hindi Dubbed</button>
-    <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Malayalam Dubbed</button>
+  <!-- Nested Dubbed Hub Sub-languages -->
+  <div id="nestedDubContainer" class="px-4 pb-2.5 flex gap-2 overflow-x-auto no-scrollbar" style="display: none;">
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this, 'all')">All Dubs</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'tamil')">Tamil Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'telugu')">Telugu Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'hindi')">Hindi Dubbed</button>
+    <button class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this, 'malayalam')">Malayalam Dubbed</button>
   </div>
 
-  <!-- Dynamic Media Grid -->
+  <!-- Media Grid -->
   <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
 
   <!-- Bottom Sheet -->
@@ -124,13 +124,13 @@
       <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </div>
 
-    <!-- Audio Selection with Codec Badges -->
+    <!-- Audio Selection -->
     <div class="mt-4">
       <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Quality & File Size Selection -->
+    <!-- Quality Selection -->
     <div class="mt-4">
       <div class="flex items-center justify-between">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
@@ -139,7 +139,7 @@
       <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Action Buttons -->
+    <!-- Actions -->
     <div class="mt-6 space-y-2.5">
       <div class="grid grid-cols-2 gap-3">
         <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
@@ -165,13 +165,13 @@
     const tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready(); }
 
-    // Mock Vault Items with proper data structures (No inline HTML syntax errors)
     const vaultData = [
       {
         id: 1,
         title: "Deadpool & Wolverine",
         category: "movies",
         subCategory: "dubbed_hub",
+        dubLanguage: "tamil",
         badge: "TAMIL DUB",
         badgeBg: "bg-red-600",
         year: "2024",
@@ -197,6 +197,7 @@
         title: "Baashha",
         category: "movies",
         subCategory: "tamil",
+        dubLanguage: "none",
         badge: "TAMIL",
         badgeBg: "bg-amber-500 text-black",
         year: "1995",
@@ -221,6 +222,7 @@
         title: "Squid Game S2",
         category: "kdrama",
         subCategory: "dubbed_hub",
+        dubLanguage: "tamil",
         badge: "K-DRAMA",
         badgeBg: "bg-purple-600",
         year: "2024",
@@ -247,6 +249,7 @@
         title: "Demon Slayer",
         category: "anime",
         subCategory: "dubbed_hub",
+        dubLanguage: "tamil",
         badge: "ANIME",
         badgeBg: "bg-emerald-600",
         year: "2024",
@@ -303,6 +306,8 @@
 
     let currentTab = 'movies';
     let currentSub = 'all';
+    let currentNestedDub = 'all';
+    let currentSearch = '';
     let currentStreamUrl = "";
     let selectedEpisodes = [1];
     let totalEpisodesCount = 0;
@@ -318,7 +323,7 @@
     function renderSubPills() {
       const subContainer = document.getElementById('subFilterContainer');
       subContainer.innerHTML = '';
-      subFilters[currentTab].forEach((item, index) => {
+      subFilters[currentTab].forEach((item) => {
         const isActive = (item.key === currentSub);
         subContainer.innerHTML += `
           <button class="sub-pill ${isActive ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this, '${item.key}')">
@@ -333,7 +338,18 @@
 
       const filtered = vaultData.filter(item => {
         if (currentTab !== 'movies' && item.category !== currentTab) return false;
-        if (currentSub !== 'all' && item.subCategory !== currentSub) return false;
+        
+        if (currentSub === 'dubbed_hub') {
+          if (item.subCategory !== 'dubbed_hub') return false;
+          if (currentNestedDub !== 'all' && item.dubLanguage !== currentNestedDub) return false;
+        } else if (currentSub !== 'all' && item.subCategory !== currentSub) {
+          return false;
+        }
+
+        if (currentSearch) {
+          const q = currentSearch.toLowerCase();
+          return item.title.toLowerCase().includes(q) || item.subInfo.toLowerCase().includes(q);
+        }
         return true;
       });
 
@@ -370,7 +386,8 @@
 
       currentTab = tabKey;
       currentSub = 'all';
-      document.getElementById('nestedDubContainer').classList.add('hidden');
+      currentNestedDub = 'all';
+      document.getElementById('nestedDubContainer').style.display = 'none';
       renderSubPills();
       renderMediaGrid();
     }
@@ -378,24 +395,38 @@
     function switchSubPill(btn, filterKey) {
       haptic();
       currentSub = filterKey;
+      currentNestedDub = 'all';
       Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
 
       const nestedContainer = document.getElementById('nestedDubContainer');
       if (filterKey === 'dubbed_hub') {
-        nestedContainer.classList.remove('hidden');
+        nestedContainer.style.display = 'flex';
+        // Reset sub buttons to 'All Dubs'
+        Array.from(nestedContainer.children).forEach((c, idx) => {
+          c.className = idx === 0 
+            ? 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap'
+            : 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+        });
       } else {
-        nestedContainer.classList.add('hidden');
+        nestedContainer.style.display = 'none';
       }
       renderMediaGrid();
     }
 
-    function selectNestedDub(btn) {
+    function selectNestedDub(btn, dubLang) {
       haptic();
+      currentNestedDub = dubLang;
       Array.from(btn.parentElement.children).forEach(el => {
-        el.className = 'text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
+        el.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap';
       });
-      btn.className = 'text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap';
+      btn.className = 'text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-600 text-white whitespace-nowrap';
+      renderMediaGrid();
+    }
+
+    function handleSearch(val) {
+      currentSearch = val;
+      renderMediaGrid();
     }
 
     function openMediaModal(itemId) {
@@ -594,9 +625,9 @@
       });
     }
 
-    // Initialize first view
+    // Init
     renderSubPills();
     renderMediaGrid();
   </script>
 </body>
-  </html>
+    </html>
