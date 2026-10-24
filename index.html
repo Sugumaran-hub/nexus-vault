@@ -154,7 +154,7 @@
           <i class="fa-solid fa-play text-red-600"></i> <span id="streamBtnText">Stream in MX</span>
         </button>
         <button onclick="launch1DM()" class="bg-red-600 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg shadow-red-900/30">
-          <i class="fa-solid fa-download"></i> <span id="downloadBtnText">1DM Download</span>
+          <i class="fa-solid fa-download"></i> <span id="downloadBtnText">Download Now</span>
         </button>
       </div>
       
@@ -556,16 +556,16 @@
       if (totalEpisodesCount > 1) {
         if (count === 1) {
           document.getElementById('streamBtnText').innerText = `Stream EP ${selectedEpisodes[0]}`;
-          document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+          document.getElementById('downloadBtnText').innerText = `Download (${sizeLabel})`;
           document.getElementById('calculatedSizeText').innerText = `Est: ${sizeLabel}`;
         } else {
           document.getElementById('streamBtnText').innerText = `Play Queue (${count})`;
-          document.getElementById('downloadBtnText').innerText = `Batch (${count} EPs)`;
+          document.getElementById('downloadBtnText').innerText = `Download (${count} EPs)`;
           document.getElementById('calculatedSizeText').innerText = `Total: ~${count} items`;
         }
       } else {
         document.getElementById('streamBtnText').innerText = "Stream in MX";
-        document.getElementById('downloadBtnText').innerText = `1DM (${sizeLabel})`;
+        document.getElementById('downloadBtnText').innerText = `Download (${sizeLabel})`;
         document.getElementById('calculatedSizeText').innerText = `File Size: ${sizeLabel}`;
       }
     }
@@ -583,13 +583,20 @@
     function launchMX() {
       haptic();
       if (!currentStreamUrl) return;
-      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;end`;
+      // MX Player direct intent
+      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=com.mxtech.videoplayer.ad;end`;
     }
 
     function launch1DM() {
       haptic();
       if (!currentStreamUrl) return;
-      window.location.href = `intent:${currentStreamUrl}#Intent;action=android.intent.action.VIEW;type=video/*;package=idm.internet.download.manager;end`;
+      // Direct Download intent trigger (1DM default grabber or direct download prompt)
+      const a = document.createElement('a');
+      a.href = currentStreamUrl;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function copyStreamUrl() {
@@ -607,4 +614,4 @@
     fetchVaultData();
   </script>
 </body>
-                                                                                                 </html>
+          </html>
