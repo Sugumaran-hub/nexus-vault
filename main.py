@@ -17,10 +17,12 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY", "efeb831b3735905153e997765ea5b2de")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
-FAST_STREAMS = [
-    "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
-    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "https://vjs.zencdn.net/v/oceans.mp4"
+# Direct High-Speed Buffer-Free MP4 Fast CDN Streams
+FAST_MP4_STREAMS = [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4"
 ]
 
 @app.get("/")
@@ -55,7 +57,6 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
         "page": 1
     }
     
-    # Universal Dubbed Hub Logic across ALL categories
     if sub == "dubbed_hub":
         if category == "kdrama":
             params["with_original_language"] = "ko"
@@ -89,6 +90,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
         
         for idx, item in enumerate(raw_results[:16]):
             title = item.get("title") or item.get("name") or "Unknown Title"
+            item_id = item.get("id", idx + 1)
             poster_path = item.get("poster_path")
             img_url = f"{TMDB_IMAGE_BASE}{poster_path}" if poster_path else "https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500"
             date = item.get("release_date") or item.get("first_air_date") or "2024"
@@ -98,7 +100,8 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
             badge_label = f"{dub_lang.upper()} DUB" if sub == "dubbed_hub" and dub_lang != "all" else (sub.upper() if sub not in ["all", "dubbed_hub"] else category.upper())
             badge_bg = "bg-red-600" if "DUB" in badge_label else ("bg-amber-500 text-black" if sub == "tamil" else "bg-zinc-800")
             
-            stream_url = FAST_STREAMS[idx % len(FAST_STREAMS)]
+            base_stream = FAST_MP4_STREAMS[idx % len(FAST_MP4_STREAMS)]
+            stream_url = f"{base_stream}?nexus_id={item_id}"
             
             primary_aud = f"{dub_lang.capitalize()} Dubbed" if sub == "dubbed_hub" and dub_lang != "all" else ("Tamil Master" if sub in ["tamil", "dubbed_hub"] else "Original Audio")
 
@@ -108,7 +111,7 @@ def get_media(category: str = Query("movies"), sub: str = Query("all"), dub_lang
             ]
 
             items.append({
-                "id": item.get("id", idx + 1),
+                "id": item_id,
                 "title": title,
                 "category": category,
                 "subCategory": sub,
@@ -165,6 +168,7 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
 
         for idx, item in enumerate(raw_items):
             title = item.get("title") or item.get("name")
+            item_id = item.get("id")
             poster = item.get("poster_path")
             year = (item.get("release_date") or item.get("first_air_date") or "2024")[:4]
             orig_lang = item.get("original_language")
@@ -176,10 +180,12 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                 continue
 
             badge_name = sub.upper() if sub != "all" else category.upper()
+            base_stream = FAST_MP4_STREAMS[idx % len(FAST_MP4_STREAMS)]
+            stream_url = f"{base_stream}?nexus_id={item_id}"
 
             if title and poster:
                 items.append({
-                    "id": item.get("id"),
+                    "id": item_id,
                     "title": title,
                     "category": category,
                     "subCategory": sub,
@@ -192,7 +198,7 @@ def search_tmdb(query: str, category: str = Query("movies"), sub: str = Query("a
                     "subs": "English, Tamil",
                     "subInfo": f"{category.capitalize()} • Match",
                     "img": f"{TMDB_IMAGE_BASE}{poster}",
-                    "streamUrl": FAST_STREAMS[idx % len(FAST_STREAMS)],
+                    "streamUrl": stream_url,
                     "audios": [
                         {"lang": f"{sub.capitalize()} Master" if sub != "all" else "Tamil Master", "codec": "Dolby 5.1", "type": "51"},
                         {"lang": "Original Audio", "codec": "Dolby Atmos", "type": "atmos"}
