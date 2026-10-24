@@ -78,19 +78,10 @@
     <button class="top-tab whitespace-nowrap" onclick="switchMainTab(this, 'anime')">Anime</button>
   </div>
 
-  <!-- Dynamic Sub Pills -->
-  <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar">
-    <button class="sub-pill active whitespace-nowrap" onclick="switchSubPill(this, 'all')">All Movies</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'tamil')">Tamil</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'malayalam')">Malayalam</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'telugu')">Telugu</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'kannada')">Kannada</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'hindi')">Hindi</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'hollywood')">Hollywood</button>
-    <button class="sub-pill whitespace-nowrap" onclick="switchSubPill(this, 'dubbed_hub')">🎙️ Dubbed Hub</button>
-  </div>
+  <!-- Sub Pills -->
+  <div id="subFilterContainer" class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
 
-  <!-- Nested Dubbed Hub Sub-languages -->
+  <!-- Nested Dubbed Hub Sub-languages (Clean Flex Toggle) -->
   <div id="nestedDubContainer" class="px-4 pb-2 hidden flex gap-2 overflow-x-auto no-scrollbar">
     <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap" onclick="selectNestedDub(this)">All Dubs</button>
     <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Tamil Dubbed</button>
@@ -99,74 +90,8 @@
     <button class="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/70 whitespace-nowrap" onclick="selectNestedDub(this)">Malayalam Dubbed</button>
   </div>
 
-  <!-- Media Grid -->
-  <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1">
-
-    <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Deadpool & Wolverine', 'movie', '2024', 'Hollywood • Action', '8.1', '2h 08m', 'English, Tamil', 
-        [{lang:'Tamil', codec:'Dolby 5.1', type:'51'}, {lang:'English', codec:'Dolby Atmos', type:'atmos'}], 
-        [{res:'720p HD', size:'850 MB'}, {res:'1080p FHD', size:'2.1 GB'}, {res:'4K UHD', size:'6.8 GB'}], 
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">
-      <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500');">
-        <span class="absolute top-2.5 left-2.5 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">TAMIL DUB</span>
-        <div class="absolute bottom-2.5 left-2.5 right-2.5">
-          <h4 class="text-xs font-bold leading-tight truncate">Deadpool & Wolverine</h4>
-          <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
-            <span>2024</span><span class="text-amber-400 font-semibold">★ 8.1</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Baashha', 'movie', '1995', 'Tamil Classic Remaster', '8.6', '2h 25m', 'English', 
-        [{lang:'Tamil Master', codec:'DTS 5.1', type:'51'}, {lang:'Original Track', codec:'Stereo 2.0', type:'stereo'}], 
-        [{res:'720p HD', size:'950 MB'}, {res:'1080p Remaster', size:'2.4 GB'}], 
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">
-      <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500');">
-        <span class="absolute top-2.5 left-2.5 bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">TAMIL</span>
-        <div class="absolute bottom-2.5 left-2.5 right-2.5">
-          <h4 class="text-xs font-bold leading-tight truncate">Baashha</h4>
-          <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
-            <span>Rajinikanth</span><span class="text-amber-400 font-semibold">★ 8.6</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Squid Game S2', 'series', '2024', 'K-Drama • Thriller', '8.0', 'Season 2', 'English, Tamil', 
-        [{lang:'Tamil Dubbed', codec:'Stereo 2.0', type:'stereo'}, {lang:'Korean Org', codec:'Dolby 5.1', type:'51'}], 
-        [{res:'720p HD', size:'420 MB/ep'}, {res:'1080p FHD', size:'1.1 GB/ep'}], 
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 2, 8)">
-      <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500');">
-        <span class="absolute top-2.5 left-2.5 bg-purple-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">K-DRAMA</span>
-        <div class="absolute bottom-2.5 left-2.5 right-2.5">
-          <h4 class="text-xs font-bold leading-tight truncate">Squid Game S2</h4>
-          <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
-            <span>Tamil Dubbed</span><span class="text-amber-400 font-semibold">★ 8.0</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="media-card cursor-pointer gpu" 
-      onclick="openSheet('Demon Slayer', 'series', '2024', 'Anime • Hashira Arc', '8.8', 'Season 4', 'English, Tamil', 
-        [{lang:'Tamil Dubbed', codec:'Stereo 2.0', type:'stereo'}, {lang:'Japanese Master', codec:'FLAC Lossless', type:'atmos'}], 
-        [{res:'720p HD', size:'260 MB/ep'}, {res:'1080p FHD', size:'650 MB/ep'}], 
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 4, 8)">
-      <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500');">
-        <span class="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">ANIME</span>
-        <div class="absolute bottom-2.5 left-2.5 right-2.5">
-          <h4 class="text-xs font-bold leading-tight truncate">Demon Slayer</h4>
-          <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
-            <span>Multi-Audio</span><span class="text-amber-400 font-semibold">★ 8.8</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  <!-- Dynamic Media Grid -->
+  <div id="mediaGrid" class="px-4 grid grid-cols-2 gap-3.5 mt-1"></div>
 
   <!-- Bottom Sheet -->
   <div id="modalBackdrop" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden transition-opacity opacity-0" onclick="closeSheet()"></div>
@@ -192,20 +117,20 @@
     <!-- Episodes Multi-Select Section -->
     <div id="seriesSection" class="mt-4 hidden border-t border-white/5 pt-3">
       <div class="flex items-center justify-between mb-2">
-        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes (Tap to Pick)</label>
+        <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Select Episodes</label>
         <button id="selectAllBtn" onclick="toggleSelectAll()" class="text-[10px] font-bold text-red-400 bg-red-600/10 px-2.5 py-1 rounded border border-red-500/20">Select All</button>
       </div>
       <div id="seasonPills" class="flex gap-2 overflow-x-auto no-scrollbar mb-2"></div>
       <div id="episodeGrid" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </div>
 
-    <!-- Audio Selection with Codec Profiles -->
+    <!-- Audio Selection with Codec Badges -->
     <div class="mt-4">
       <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Audio Stream & Codec Profile</label>
       <div id="audioTracks" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Quality Selection -->
+    <!-- Quality & File Size Selection -->
     <div class="mt-4">
       <div class="flex items-center justify-between">
         <label class="text-[10px] text-white/40 uppercase tracking-widest font-mono">Quality & File Size</label>
@@ -214,7 +139,7 @@
       <div id="qualityPills" class="flex gap-2 mt-1.5 overflow-x-auto no-scrollbar"></div>
     </div>
 
-    <!-- Actions -->
+    <!-- Action Buttons -->
     <div class="mt-6 space-y-2.5">
       <div class="grid grid-cols-2 gap-3">
         <button onclick="launchMX()" class="bg-white text-black font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-lg">
@@ -240,23 +165,201 @@
     const tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready(); }
 
+    // Mock Vault Items with proper data structures (No inline HTML syntax errors)
+    const vaultData = [
+      {
+        id: 1,
+        title: "Deadpool & Wolverine",
+        category: "movies",
+        subCategory: "dubbed_hub",
+        badge: "TAMIL DUB",
+        badgeBg: "bg-red-600",
+        year: "2024",
+        rating: "8.1",
+        runtime: "2h 08m",
+        subs: "English, Tamil",
+        subInfo: "Hollywood • Action",
+        img: "https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=500",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        audios: [
+          { lang: "Tamil", codec: "Dolby 5.1", type: "51" },
+          { lang: "English", codec: "Dolby Atmos", type: "atmos" }
+        ],
+        qualities: [
+          { res: "720p HD", size: "850 MB" },
+          { res: "1080p FHD", size: "2.1 GB" },
+          { res: "4K UHD", size: "6.8 GB" }
+        ],
+        type: "movie"
+      },
+      {
+        id: 2,
+        title: "Baashha",
+        category: "movies",
+        subCategory: "tamil",
+        badge: "TAMIL",
+        badgeBg: "bg-amber-500 text-black",
+        year: "1995",
+        rating: "8.6",
+        runtime: "2h 25m",
+        subs: "English",
+        subInfo: "Tamil Classic Remaster",
+        img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        audios: [
+          { lang: "Tamil Master", codec: "DTS 5.1", type: "51" },
+          { lang: "Original Track", codec: "Stereo 2.0", type: "stereo" }
+        ],
+        qualities: [
+          { res: "720p HD", size: "950 MB" },
+          { res: "1080p Remaster", size: "2.4 GB" }
+        ],
+        type: "movie"
+      },
+      {
+        id: 3,
+        title: "Squid Game S2",
+        category: "kdrama",
+        subCategory: "dubbed_hub",
+        badge: "K-DRAMA",
+        badgeBg: "bg-purple-600",
+        year: "2024",
+        rating: "8.0",
+        runtime: "Season 2",
+        subs: "English, Tamil",
+        subInfo: "K-Drama • Thriller",
+        img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        audios: [
+          { lang: "Tamil Dubbed", codec: "Stereo 2.0", type: "stereo" },
+          { lang: "Korean Org", codec: "Dolby 5.1", type: "51" }
+        ],
+        qualities: [
+          { res: "720p HD", size: "420 MB/ep" },
+          { res: "1080p FHD", size: "1.1 GB/ep" }
+        ],
+        type: "series",
+        seasons: 2,
+        episodes: 8
+      },
+      {
+        id: 4,
+        title: "Demon Slayer",
+        category: "anime",
+        subCategory: "dubbed_hub",
+        badge: "ANIME",
+        badgeBg: "bg-emerald-600",
+        year: "2024",
+        rating: "8.8",
+        runtime: "Season 4",
+        subs: "English, Tamil",
+        subInfo: "Anime • Hashira Arc",
+        img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        audios: [
+          { lang: "Tamil Dubbed", codec: "Stereo 2.0", type: "stereo" },
+          { lang: "Japanese Master", codec: "FLAC Lossless", type: "atmos" }
+        ],
+        qualities: [
+          { res: "720p HD", size: "260 MB/ep" },
+          { res: "1080p FHD", size: "650 MB/ep" }
+        ],
+        type: "series",
+        seasons: 4,
+        episodes: 8
+      }
+    ];
+
+    const subFilters = {
+      movies: [
+        { label: "All Movies", key: "all" },
+        { label: "Tamil", key: "tamil" },
+        { label: "Malayalam", key: "malayalam" },
+        { label: "Telugu", key: "telugu" },
+        { label: "Kannada", key: "kannada" },
+        { label: "Hindi", key: "hindi" },
+        { label: "Hollywood", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+      ],
+      series: [
+        { label: "All Series", key: "all" },
+        { label: "Tamil Web Series", key: "tamil" },
+        { label: "Hindi Shows", key: "hindi" },
+        { label: "English Shows", key: "hollywood" },
+        { label: "🎙️ Dubbed Hub", key: "dubbed_hub" }
+      ],
+      kdrama: [
+        { label: "All K-Drama", key: "all" },
+        { label: "Tamil Dubbed", key: "dubbed_hub" },
+        { label: "Original Korean", key: "korean" }
+      ],
+      anime: [
+        { label: "All Anime", key: "all" },
+        { label: "Tamil Dubbed", key: "dubbed_hub" },
+        { label: "English Dubbed", key: "english_dub" },
+        { label: "Japanese (Sub)", key: "subbed" }
+      ]
+    };
+
+    let currentTab = 'movies';
+    let currentSub = 'all';
     let currentStreamUrl = "";
-    let selectedEpisodes = [];
+    let selectedEpisodes = [1];
     let totalEpisodesCount = 0;
     let currentQualities = [];
     let selectedQualityIndex = 0;
     let currentAudioList = [];
     let selectedAudioIndex = 0;
 
-    const subFilters = {
-      movies: ['All Movies', 'Tamil', 'Malayalam', 'Telugu', 'Kannada', 'Hindi', 'Hollywood', '🎙️ Dubbed Hub'],
-      series: ['All Series', 'Tamil Web Series', 'Hindi Shows', 'English Shows', '🎙️ Dubbed Hub'],
-      kdrama: ['All K-Drama', 'Tamil Dubbed K-Drama', 'Original Korean (Eng Sub)'],
-      anime: ['All Anime', 'Tamil Dubbed Anime', 'English Dubbed', 'Japanese (Subbed)']
-    };
-
     function haptic() {
       if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function renderSubPills() {
+      const subContainer = document.getElementById('subFilterContainer');
+      subContainer.innerHTML = '';
+      subFilters[currentTab].forEach((item, index) => {
+        const isActive = (item.key === currentSub);
+        subContainer.innerHTML += `
+          <button class="sub-pill ${isActive ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this, '${item.key}')">
+            ${item.label}
+          </button>`;
+      });
+    }
+
+    function renderMediaGrid() {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+
+      const filtered = vaultData.filter(item => {
+        if (currentTab !== 'movies' && item.category !== currentTab) return false;
+        if (currentSub !== 'all' && item.subCategory !== currentSub) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 py-12 text-center text-white/40 text-xs font-mono">
+            <i class="fa-solid fa-film text-2xl mb-2 opacity-30"></i><br>
+            No titles indexed in this hub yet.
+          </div>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        grid.innerHTML += `
+          <div class="media-card cursor-pointer gpu" onclick="openMediaModal(${item.id})">
+            <div class="h-56 bg-zinc-900 relative bg-cover bg-center" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(4,4,7,0.96) 100%), url('${item.img}');">
+              <span class="absolute top-2.5 left-2.5 ${item.badgeBg} text-white text-[9px] font-black px-2 py-0.5 rounded-md tracking-wider">${item.badge}</span>
+              <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                <h4 class="text-xs font-bold leading-tight truncate">${item.title}</h4>
+                <div class="flex items-center justify-between text-[10px] text-white/50 mt-1">
+                  <span>${item.year}</span><span class="text-amber-400 font-semibold">★ ${item.rating}</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      });
     }
 
     function switchMainTab(btn, tabKey) {
@@ -265,26 +368,26 @@
       document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
 
+      currentTab = tabKey;
+      currentSub = 'all';
       document.getElementById('nestedDubContainer').classList.add('hidden');
-
-      const subContainer = document.getElementById('subFilterContainer');
-      subContainer.innerHTML = '';
-      subFilters[tabKey].forEach((filterName, index) => {
-        subContainer.innerHTML += `<button class="sub-pill ${index === 0 ? 'active' : ''} whitespace-nowrap" onclick="switchSubPill(this, '${filterName}')">${filterName}</button>`;
-      });
+      renderSubPills();
+      renderMediaGrid();
     }
 
     function switchSubPill(btn, filterKey) {
       haptic();
+      currentSub = filterKey;
       Array.from(btn.parentElement.children).forEach(el => el.classList.remove('active'));
       btn.classList.add('active');
 
       const nestedContainer = document.getElementById('nestedDubContainer');
-      if (filterKey.includes('Dubbed Hub')) {
+      if (filterKey === 'dubbed_hub') {
         nestedContainer.classList.remove('hidden');
       } else {
         nestedContainer.classList.add('hidden');
       }
+      renderMediaGrid();
     }
 
     function selectNestedDub(btn) {
@@ -295,25 +398,28 @@
       btn.className = 'text-[10px] font-bold px-3 py-1 rounded-lg bg-red-600 text-white whitespace-nowrap';
     }
 
-    function openSheet(title, type, year, sub, rating, runtime, subs, audios, qualities, streamUrl, seasons = 1, episodes = 1) {
+    function openMediaModal(itemId) {
       haptic();
-      currentStreamUrl = streamUrl;
+      const item = vaultData.find(i => i.id === itemId);
+      if (!item) return;
+
+      currentStreamUrl = item.streamUrl;
       selectedEpisodes = [1];
-      totalEpisodesCount = episodes;
-      currentQualities = qualities;
-      selectedQualityIndex = 1 < qualities.length ? 1 : 0;
-      currentAudioList = audios;
+      totalEpisodesCount = item.episodes || 1;
+      currentQualities = item.qualities || [];
+      selectedQualityIndex = 0;
+      currentAudioList = item.audios || [];
       selectedAudioIndex = 0;
 
-      document.getElementById('modalTitle').innerText = title;
-      document.getElementById('modalMeta').innerText = `${year} • ★ ${rating} • ${sub}`;
-      document.getElementById('modalRuntime').innerText = runtime;
-      document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${subs}`;
+      document.getElementById('modalTitle').innerText = item.title;
+      document.getElementById('modalMeta').innerText = `${item.year} • ★ ${item.rating} • ${item.subInfo}`;
+      document.getElementById('modalRuntime').innerText = item.runtime;
+      document.getElementById('modalSubs').innerHTML = `<i class="fa-solid fa-closed-captioning mr-1"></i>Subs: ${item.subs}`;
 
       const seriesSection = document.getElementById('seriesSection');
-      if (type === 'series') {
+      if (item.type === 'series') {
         seriesSection.classList.remove('hidden');
-        renderSeasonsAndEpisodes(seasons, episodes);
+        renderSeasonsAndEpisodes(item.seasons || 1, item.episodes || 1);
       } else {
         seriesSection.classList.add('hidden');
       }
@@ -334,7 +440,7 @@
       const audioBox = document.getElementById('audioTracks');
       audioBox.innerHTML = '';
       currentAudioList.forEach((aud, i) => {
-        const isSelected = i === selectedAudioIndex;
+        const isSelected = (i === selectedAudioIndex);
         let badgeClass = 'codec-stereo';
         if (aud.type === 'atmos') badgeClass = 'codec-atmos';
         if (aud.type === '51') badgeClass = 'codec-51';
@@ -358,7 +464,7 @@
       const qualityBox = document.getElementById('qualityPills');
       qualityBox.innerHTML = '';
       currentQualities.forEach((q, i) => {
-        const isSelected = i === selectedQualityIndex;
+        const isSelected = (i === selectedQualityIndex);
         qualityBox.innerHTML += `
           <button class="${isSelected ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1.5 rounded-xl text-xs whitespace-nowrap flex items-center gap-1.5" onclick="selectQuality(${i})">
             <span>${q.res}</span>
@@ -378,7 +484,7 @@
       const sBox = document.getElementById('seasonPills');
       sBox.innerHTML = '';
       for (let s = 1; s <= seasons; s++) {
-        sBox.innerHTML += `<button class="${s === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1 rounded-lg text-xs" onclick="selectBtn(this)">Season ${s}</button>`;
+        sBox.innerHTML += `<button class="${s === 1 ? 'bg-white text-black font-bold' : 'bg-white/5 border border-white/10 text-white/60'} px-3 py-1 rounded-lg text-xs" onclick="selectSeason(this)">Season ${s}</button>`;
       }
 
       const eBox = document.getElementById('episodeGrid');
@@ -387,6 +493,14 @@
         const isSelected = selectedEpisodes.includes(e);
         eBox.innerHTML += `<button id="ep-btn-${e}" class="ep-pill ${isSelected ? 'selected' : ''} whitespace-nowrap" onclick="toggleEpisode(${e})">EP ${e}</button>`;
       }
+    }
+
+    function selectSeason(btn) {
+      haptic();
+      Array.from(btn.parentElement.children).forEach(c => {
+        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-lg text-xs';
+      });
+      btn.className = 'bg-white text-black font-bold px-3 py-1 rounded-lg text-xs';
     }
 
     function toggleEpisode(epNumber) {
@@ -458,14 +572,6 @@
       setTimeout(() => backdrop.classList.add('hidden'), 220);
     }
 
-    function selectBtn(btn) {
-      haptic();
-      Array.from(btn.parentElement.children).forEach(c => {
-        c.className = 'bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-lg text-xs';
-      });
-      btn.className = 'bg-white text-black font-bold px-3 py-1 rounded-lg text-xs';
-    }
-
     function launchMX() {
       haptic();
       if (!currentStreamUrl) return;
@@ -487,6 +593,10 @@
         setTimeout(() => toast.classList.add('hidden'), 2000);
       });
     }
+
+    // Initialize first view
+    renderSubPills();
+    renderMediaGrid();
   </script>
 </body>
   </html>
